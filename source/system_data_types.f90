@@ -210,8 +210,6 @@ LOGICAL :: L_UPF
              INTEGER,        DIMENSION(:,:),  POINTER :: upf_els_beta,upf_lll,upf_kbeta
        REAL(kind=dp),        DIMENSION(:,:),  POINTER :: upf_rcut,upf_rcutus,upf_oc,upf_epseu,upf_rcut_chi,rho_atom
        REAL(kind=dp),        DIMENSION(:,:,:),POINTER :: upf_beta,upf_chi
-!Sudhir DBG 
 LOGICAL LOPEN_SHELL,is_lsd_but_not
 INTEGER MULTIPLICITY, NSPIN, NEL_UP, NEL_DOWN, NLSD
-!Sudhir DBG 
 END MODULE system_data_types
