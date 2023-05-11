@@ -73,13 +73,11 @@ endif
   COMPLEX*16 rhog
   COMPLEX(KIND=dp), DIMENSION(:), POINTER :: work
 
-!Sudhir DBG 
     if(lopen_shell.and.nlsd.eq.2)then
        do ig=1,ngrho_l
           !rho_g(ig,1)=rho_g(ig,1)+rho_g(ig,2)
        enddo
      endif
-!Sudhir DBG 
 
   if(g0_stat) then
     ig1=2
