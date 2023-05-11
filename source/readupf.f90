@@ -75,7 +75,7 @@
       meshv(id_sp)=upf_meshv(id_sp)
       meshw(id_sp)=meshv(id_sp)
  
-      call atom
+      call atom_info
       DO i=1,99
       IF(trim(SYMBOL(i)).EQ.upf_element(id_sp))Z(id_sp)=i
       ENDDO 

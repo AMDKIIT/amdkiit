@@ -165,7 +165,7 @@
 LOGICAL CONVGEO,CONVWF,PRECONDITION,GOPT
 INTEGER NSHELL(2)     !Number of shell n per species          
 INTEGER LSHELL(20,2)  !Number of orbital per species 
-INTEGER ELCON(4,7,99),M1SHL
+INTEGER M1SHL,e_config(4,7,99)
 CHARACTER(LEN=2) SYMBOL(99)
 REAL(kind=dp), DIMENSION(:),  POINTER ::OCCUPATION !NSTATE !TODO
 INTEGER nattot   !Total number of  orbitals

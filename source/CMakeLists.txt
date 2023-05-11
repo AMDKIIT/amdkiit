@@ -80,7 +80,7 @@ set(CMAKE_CXX_STANDARD 11)
 add_library(fortran_yaml_cpp yaml_types.f90 yaml.f90 yaml.cpp)
 target_link_libraries(fortran_yaml_cpp yaml-cpp)
 
-add_executable(${CMAKE_PROJECT_NAME}.x print_logo_amdkiit.f90 yamlread.f90 system_data_types.f90 max_parameter_pp.f90 kinds.f90 atom.f90 atomic_basis.f90 cg.f90 constants.f90 density.f90 exp_igr.f90 fft_interface.f90 fft_support.f90 gradient.f90 gvectors.f90 interpolgrid.f90 kinds.f90 lsfbtr.f90 main.f90 math.f90 max_parameter_pp.f90 mympi.f90 nuclear_grad.f90 pbc.f90 potential.f90 pseudopotential.f90 read_pp_file.f90 readpsp.f90 readstring.f90 set_cell.f90 system_data_types.f90 total_energy.f90 wfn_initialize.f90 xc.f90 bfgs_mod.f90 function_val.f90 backtracking.f90 readupf.f90 spline_inter.f90 spline.f90 spherical_func.f90 bessel_func.f90 init_module.f90 do_opt.f90 version.f90 eprint.f90 set_environment.f90)
+add_executable(${CMAKE_PROJECT_NAME}.x print_logo_amdkiit.f90 yamlread.f90 system_data_types.f90 max_parameter_pp.f90 kinds.f90 atom_info.f90 atomic_basis.f90 cg.f90 constants.f90 density.f90 exp_igr.f90 fft_interface.f90 fft_support.f90 gradient.f90 gvectors.f90 interpolgrid.f90 kinds.f90 sbt.f90 main.f90 math.f90 max_parameter_pp.f90 mympi.f90 nuclear_grad.f90 pbc.f90 potential.f90 pseudopotential.f90 read_pp_file.f90 readpsp.f90 readstring.f90 set_cell.f90 system_data_types.f90 total_energy.f90 wfn_initialize.f90 xc.f90 bfgs_mod.f90 function_val.f90 backtracking.f90 readupf.f90 spline_inter.f90 spline.f90 spherical_func.f90 bessel_func.f90 init_module.f90 do_opt.f90 version.f90 eprint.f90 set_environment.f90)
 
 target_link_libraries(${CMAKE_PROJECT_NAME}.x fortran_yaml_cpp ${LIBS})
 

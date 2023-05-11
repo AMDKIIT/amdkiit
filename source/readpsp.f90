@@ -1,23 +1,16 @@
 MODULE READpsp
 CONTAINS
 
-      SUBROUTINE psp
-      USE system_data_types
-      IMPLICIT NONE
-        ALLOCATE(slatr_ex(sp_t),tnum(sp_t))
-        !ALLOCATE(vr(splnmax,sp_t,lmaxx),rps(splnmax,sp_t,lmaxx))
-      
-      END SUBROUTINE psp
-
-
-
-
+SUBROUTINE psp
+USE system_data_types
+IMPLICIT NONE
+  ALLOCATE(slatr_ex(sp_t),tnum(sp_t))
+END SUBROUTINE psp
 
 
 SUBROUTINE read_psp(pspfile,isp)
 USE system_data_types
 USE readstring
-!USE 
 IMPLICIT NONE
 
 INTEGER :: ISP
@@ -28,7 +21,7 @@ INTEGER INDX_A,INDX_E,IT,I,L,LREAD
 LOGICAL ERREAD
 
 CHARACTER LINE*80, PATHOFPP*42
-!DO IS=1,sp_t
+
 TNUM(ISP)=.FALSE.
       OPEN(UNIT=IUNIT,FILE=trim(PATHOFINPUT)//'PSEUDOPOTENTIAL/'//pspfile,IOSTAT=ios)
       IF(ios.NE.0)THEN
@@ -37,7 +30,6 @@ TNUM(ISP)=.FALSE.
       ENDIF
 
 
-!REWIND(IUNIT)
 READ(IUNIT,END=20,ERR=20,FMT='(A)') LINE
 CALL STRINGINDX(LINE,INDX_A,INDX_E)
 

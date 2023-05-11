@@ -1,6 +1,6 @@
 MODULE version
   USE kinds
   CHARACTER(LEN=20), PARAMETER :: PROJECT_VER= "1.0.0"
-  CHARACTER(LEN=20), PARAMETER :: compilation_time= "10-05-2023 07:57:59"
+  CHARACTER(LEN=20), PARAMETER :: compilation_time= "11-05-2023 11:52:08"
 END MODULE version
 

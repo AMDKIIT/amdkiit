@@ -9,7 +9,8 @@ MODULE atomic_basis
   USE math
   USE bessel_func
   !       SLATER MINIMAL BASIS
-  integer ity
+  integer ity!e_config(4,7,99)
+  !
   integer,dimension(:,:),allocatable ::    nqsto
   real(kind=dp), dimension(:,:), allocatable::stoexp
   real(kind=dp), dimension(:,:,:), allocatable::atwfr
@@ -116,12 +117,12 @@ ngh=0
   bsint=0.0
   fint=0.0
   DO is=1,sp_t
-    call atom
+    call atom_info
     !ibtype(is)=1
     iatom=z(is)
     valch=zv(is)
     zc=DBLE(iatom)-valch
-    CALL icopy(28,elcon(1,1,iatom),1,ne,1)
+    CALL icopy(28,e_config(1,1,iatom),1,ne,1)
     !WRITE(6,*)"#iNNE,",NE
     ms=0
     m=0
@@ -145,7 +146,7 @@ ngh=0
 
   DO is=1,sp_t
    ne=0
-    CALL icopy(28,elcon(1,1,z(is)),1,ne,1)
+    CALL icopy(28,e_config(1,1,z(is)),1,ne,1)
       zc=DBLE(z(is))-zv(is)
         ms=0
         m=0
@@ -217,7 +218,7 @@ ngh=0
             fint(ir)=fourpi*atwfr(ir,ishell,is)/atrg(ir,is)
           enddo
 !         fourier transformation
-          call lsfbtr(fint,bsint,l,rmin,gmin,dlog(1.049999881D0),n2,saved,&
+          call sbt(fint,bsint,l,rmin,gmin,dlog(1.049999881D0),n2,saved,&
      &              work(1,1),work(1,2),work(1,3),work(1,5),2*splnmax,disc)
 !            call tgrid(gg(1),meshat,ggng(1),nspln,bsint(1),splnmax,temp(1,1),temp(1,2),temp(1,3))
             call INTRP_grid(gg(1),meshat,ggng(1),nspln,bsint(1),splnmax)

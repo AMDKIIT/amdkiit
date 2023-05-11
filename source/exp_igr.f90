@@ -12,7 +12,7 @@ MOdule exp_igr
   COMPLEX*16, dimension(:,:),allocatable ::ei1,ei2,ei3
   COMPLEX*16 dp1,dp2,dp3,dm1,dm2,dm3,ei10,ei20,ei30,tm_dp,tm_dm,ei123
   REAL(KIND=dp)    sum1,sum2,sum3,sum_1,sum_2,sum_3
-  INTEGER nr1s,nr2s,nr3s,iat!,iatpt(2,3)!to DO
+  INTEGER nr1s,nr2s,nr3s,iat
   REAL(kind=dp) b1(3),b2(3),b3(3)
   ALLOCATE(eigr(ngrho_l,atom_t),eigrxrhos(ngrho_l),eigrxvps(ngrho_l),eigr_pw(ngpw_l,atom_t))
 
