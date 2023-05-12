@@ -2,24 +2,23 @@ SUBROUTINE atom_info
    USE system_data_types
    IMPLICIT NONE
    INTEGER   I,J,K
-   INTEGER, PARAMETER :: tL = 4, tN = 7, tK = 99
-   INTEGER :: econfig(tL, tN, tK)
-   CHARACTER*2 symbol_(99)
+   INTEGER, PARAMETER :: tl = 4, tn = 7, tk = 99
+   INTEGER :: econfig(tl,tn,tk)
+   CHARACTER*2 symbol_(tk)
 
-           DATA symbol_/'H','He','Li','Be','B','C','N','O',&
-     &        'F','Ne','Na','Mg','Al','Si','P','S','Cl',&
-     &        'Ar','K','Ca','Sc','Ti','V','Cr','Mn','Fe',&
-     &        'Co','Ni','Cu','Zn','Ga','Ge','As','Se','Br',&
-     &        'Kr','Rb','Sr','Y','Zr','Nb','Mo','Tc','Ru','Rh',&
-     &        'Pd','Ag','Cd','In','Sn','Sb','Te','I','Xe',&
-     &        'Cs','Ba','La','Ce','Pr','Nd','Pm','Sm','Eu','Gd',&
-     &        'Tb','Dy','Ho','Er','Tm','Yb','Lu','Hf','Ta','W',&
-     &        'Re','Os','Ir','Pt','Au','Hg','Tl','Pb','Bi','Po',&
-     &        'At','Rn','Fr','Ra','Ac','Th','Pa','U','Np','Pu',&
-     &        'Am','Cm','Bk','Cf','Es'/
-
+    DATA symbol_/'H','He','Li','Be','B','C','N','O',&
+             'F','Ne','Na','Mg','Al','Si','P','S','Cl',&
+             'Ar','K','Ca','Sc','Ti','V','Cr','Mn','Fe',&
+             'Co','Ni','Cu','Zn','Ga','Ge','As','Se','Br',&
+             'Kr','Rb','Sr','Y','Zr','Nb','Mo','Tc','Ru','Rh',&
+             'Pd','Ag','Cd','In','Sn','Sb','Te','I','Xe',&
+             'Cs','Ba','La','Ce','Pr','Nd','Pm','Sm','Eu','Gd',&
+             'Tb','Dy','Ho','Er','Tm','Yb','Lu','Hf','Ta','W',&
+             'Re','Os','Ir','Pt','Au','Hg','Tl','Pb','Bi','Po',&
+             'At','Rn','Fr','Ra','Ac','Th','Pa','U','Np','Pu',&
+             'Am','Cm','Bk','Cf','Es'/
      
-     econfig(:, :,1:99) = RESHAPE([&
+     econfig(:, :,1:tk) = RESHAPE([&
      1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,&
      2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,&
      2,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,&
@@ -119,13 +118,13 @@ SUBROUTINE atom_info
      2,0,0,0,2,6,0,0,2,6,10,0,2,6,10,14,2,6,10,9,2,6,0,0,2,0,0,0,&
      2,0,0,0,2,6,0,0,2,6,10,0,2,6,10,14,2,6,10,10,2,6,0,0,2,0,0,0,&
      2,0,0,0,2,6,0,0,2,6,10,0,2,6,10,14,2,6,10,11,2,6,0,0,2,0,0,0],&
-     [tL,tN,tK])
+     [tl,tn,tk])
 
-      DO I=1,99
-      symbol(I)=symbol_(I)
-        DO J=1,7
-          DO K=1,4
-            e_config(K,J,I)=econfig(K,J,I)
+      DO i=1,tk
+        symbol(i)=symbol_(i)
+        DO j=1,tn
+          DO k=1,tl
+            e_config(k,j,i)=econfig(k,j,i)
           ENDDO
         ENDDO
       ENDDO
