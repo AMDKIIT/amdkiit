@@ -275,17 +275,11 @@ END SUBROUTINE
 
     integer, intent(in) :: n,o,totatom,gopt_step
     REAL(KIND=DP), intent(in) :: a(3,n,o),totenergy
-    CHARACTER(LEN=3) ::fstatus
     INTEGER I,J,K
     
-    if(gopt_step.EQ.0) THEN
-        fstatus='new'
-    else 
-        fstatus='old'
-    endif
-
+    if(ionode)then
     !file_name = 'GEOOPT.xyz'!// trim(adjustl(file_id)) // '.xyz'
-    open(12,file = 'GEO_OPT.xyz',STATUS=fstatus)!trim(file_name))
+    open(12,file = 'atom_co.xyz')!trim(file_name))
     WRITE(12,*)totatom
     write(12,*)"ENERGY=",totenergy!,"GRADIENT=",gnorm
          do k = 1, o
@@ -295,7 +289,7 @@ END SUBROUTINE
            end do
          end do
     write(12,*)"   "
-    !close(12)
+    endif
     end subroutine
 
        SUBROUTINE D_FNL

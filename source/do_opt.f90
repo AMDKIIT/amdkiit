@@ -23,7 +23,7 @@ subroutine optimize
     IF(IONODE)write(6,"(A)")repeat("*", 93)
 
   CALL wfn_opt(0)
-    
+      
   else
     IF(IONODE)WRITE(*,"(A25)") "Wavefunction Optimization"
     IF(IONODE)write(6,"(A)")repeat("-", 93)

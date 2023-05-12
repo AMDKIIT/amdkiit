@@ -1,104 +1,107 @@
 MODULE READpsp
-CONTAINS
+  CONTAINS
 
-SUBROUTINE psp
-USE system_data_types
-IMPLICIT NONE
+  SUBROUTINE psp
+  USE system_data_types
+  IMPLICIT NONE
   ALLOCATE(slatr_ex(sp_t),tnum(sp_t))
-END SUBROUTINE psp
+  END SUBROUTINE psp
 
 
-SUBROUTINE read_psp(pspfile,isp)
-USE system_data_types
-USE readstring
-IMPLICIT NONE
+  SUBROUTINE read_psp(pspfile,isp)
+  USE system_data_types
+  USE readstring
 
-INTEGER :: ISP
-INTEGER   IUNIT,ios
-PARAMETER (IUNIT=20)
-CHARACTER, INTENT(in) :: pspfile*(*)
-INTEGER INDX_A,INDX_E,IT,I,L,LREAD
-LOGICAL ERREAD
+  IMPLICIT NONE
+  INTEGER :: ISP
+  INTEGER   IUNIT,ios
+  PARAMETER (IUNIT=20)
+  CHARACTER, INTENT(in) :: pspfile*(*)
+  INTEGER I,L
 
-CHARACTER LINE*80, PATHOFPP*42
+  CHARACTER LINE*80, PATHOFPP*42
+  TNUM(ISP)=.FALSE.
 
-TNUM(ISP)=.FALSE.
-      OPEN(UNIT=IUNIT,FILE=trim(PATHOFINPUT)//'PSEUDOPOTENTIAL/'//pspfile,IOSTAT=ios)
-      IF(ios.NE.0)THEN
-        WRITE(*,*)"    Reading ",pspfile," is not successful"
-        STOP
-      ENDIF
+     OPEN(UNIT=IUNIT,FILE=trim(PATHOFINPUT)//'PSEUDOPOTENTIAL/'//pspfile,IOSTAT=ios)
+       IF(ios.NE.0)THEN
+         IF(ionode)WRITE(*,*)"    Reading ",pspfile," is not successful"
+         STOP
+       ENDIF
+       !ATOM section
+       CALL search(iunit,"ATOM")
+       CALL str2var(iunit,"Z ",line)
+       READ(line,*)z(isp)
+       CALL str2var(iunit,"ZV",line)
+       READ(line,*)zv(isp)
+       CALL str2var(iunit,"XC",line)
+       CALL str2var(iunit,"TYPE",line)
+       IF(INDEX(line,'NUMERIC').NE.0)tnum(isp)=.TRUE.
+       print*,tnum(isp)
+       CALL search(IUNIT,"END")
+       !INFO section
+       CALL search(IUNIT,"INFO")
+       11 CONTINUE
+       READ(iunit,END=20,ERR=20,FMT='(A)') line
+       IF(INDEX(line,'&END').EQ.0) GOTO 11
+       ! POTENTIAL section
+       call search(iunit,"POTENTIAL")
+       READ(iunit,END=20,ERR=20,FMT='(A)') line
+       READ(line,*)meshv(isp)
+         DO i=1,meshv(isp)
+           READ(iunit,*) rr(i,isp),(vr(i,isp,l),l=1,lmax(isp))
+         ENDDO
+       call search(IUNIT,"END")
 
+       ! WAVEFUNCTION section
+       CALL search(iunit,"WAVEFUNCTION")
+       READ(iunit,END=20,ERR=20,FMT='(A)') line
+       READ(line,*)meshw(isp)
+         DO i=1,meshw(isp)
+           READ(iunit,*) rr(i,isp),(rps(i,isp,l),l=1,lmax(isp))
+         ENDDO
+       CALL search(IUNIT,"END")
+      IF(meshw(isp).NE.meshv(isp))WRITE(6,*)"ERROR:INCOMPATIBLE MESHES....",meshw(isp),meshv(isp)
 
-READ(IUNIT,END=20,ERR=20,FMT='(A)') LINE
-CALL STRINGINDX(LINE,INDX_A,INDX_E)
+    RETURN
 
-IF(INDEX(LINE, LINE(INDX_A:INDX_E)) == 0)THEN
-    WRITE(6,*)"&ATOM SECTION NOT FOUND"
-ENDIF
-
-READ(IUNIT,END=20,ERR=20,FMT='(A)') LINE
-CALL STRINGINDX(LINE,INDX_A,INDX_E)
-INDX_A=INDEX(LINE,'=')+1
-CALL READ_I(LINE(INDX_A:LEN(LINE)),Z(ISP),ERREAD)
-READ(IUNIT,END=20,ERR=20,FMT='(A)') LINE
-CALL STRINGINDX(LINE,INDX_A,INDX_E)
-INDX_A=INDEX(LINE,'=')+1
-CALL READ_I(LINE(INDX_A:LEN(LINE)),ZV(ISP),ERREAD)
-
-READ(IUNIT,END=20,ERR=20,FMT='(A)') LINE
-CALL STRINGINDX(LINE,INDX_A,INDX_E)
-INDX_A=INDEX(LINE,'=')+1
-CALL READ_I(LINE(INDX_A:LEN(LINE)),XC_FUN(ISP),ERREAD)
-INDX_A=INDEX(LINE,'.')-1!+INDX_E+1
-CALL READ_R(LINE(INDX_A:LEN(LINE)),SLATR_EX(ISP),ERREAD)
-
-READ(IUNIT,END=20,ERR=20,FMT='(A)') LINE
-INDX_A=INDEX(LINE,'NUMERIC')
-IF(INDX_A .NE. 0)TNUM(ISP)=.TRUE.
-
-READ(IUNIT,END=20,ERR=20,FMT='(A)') LINE
-READ(IUNIT,END=20,ERR=20,FMT='(A)') LINE
-IF(INDEX(LINE,'&INFO') .NE. 0) THEN
-        IT=0
-        DO I=1,60
-        READ(IUNIT,END=20,ERR=20,FMT='(A)') LINE
-        IF(INDEX(LINE,'&END').NE.0) GOTO 10
-        IT=IT+1
-        !INFOPP(IT,IS)=LINE(1:66)
-        !WRITE(6,*)LINE
-        ENDDO
-   10 CONTINUE
-ENDIF
-
-READ(IUNIT,END=20,ERR=20,FMT='(A)') LINE
-IF(INDEX(LINE,'&POTENTIAL') .NE. 0) THEN
-READ(IUNIT,END=20,ERR=20,FMT='(A)') LINE
-CALL STRINGINDX(LINE,INDX_A,INDX_E)
-CALL READ_I(LINE(INDX_A:LEN(LINE)),MESHV(ISP),ERREAD)
-       DO I=1,MESHV(ISP)
-       READ(IUNIT,*) RR(I,ISP),(VR(I,ISP,L),L=1,LMAX(ISP))
-       ENDDO
-READ(IUNIT,END=20,ERR=20,FMT='(A)') LINE
-IF(INDEX(LINE,'&END').EQ.0)WRITE(6,*)"SOMETHING WRONG no END"
-ENDIF
+    20 WRITE(*,*) "Error occurred while reading file"
+    STOP
+    END SUBROUTINE read_psp
 
 
-READ(IUNIT,END=20,ERR=20,FMT='(A)') LINE
-IF(INDEX(LINE,'&WAVEFUNCTION') .NE. 0) THEN
-READ(IUNIT,END=20,ERR=20,FMT='(A)') LINE
-CALL STRINGINDX(LINE,INDX_A,INDX_E)
-CALL READ_I(LINE(INDX_A:LEN(LINE)),MESHW(ISP),ERREAD)
-       DO I=1,MESHW(ISP)
-       READ(IUNIT,*) RR(I,ISP),(RPS(I,ISP,L),L=1,LMAX(ISP))
-       ENDDO
-READ(IUNIT,END=20,ERR=20,FMT='(A)') LINE
-IF(INDEX(LINE,'&END').EQ.0)WRITE(6,*)"SOMETHING WRONG no END"
-IF(MESHW(ISP).NE.MESHV(ISP))WRITE(6,*)".......ERROR:INCOMPATIBLE MESHES..........",MESHW(ISP),MESHV(ISP)
-         ENDIF
-!ENDDO
-20 CONTINUE
-RETURN
-END SUBROUTINE read_psp
+
+    SUBROUTINE search (id, string)
+    implicit none
+    integer :: id
+    character (len=*) :: string  ! Label to be matched
+    character (len=80) :: read_string ! String read from file
+    integer :: ios
+
+    ios = 0
+    do while (ios.eq.0)
+    read (id,iostat = ios, err = 99,FMT='(A)') read_string
+    if (INDEX(read_string,"&"//string).NE.0 ) then
+    return
+    endif
+    enddo
+    99 print*, 'ERROR!!! No "',string,'" block found in psedopotential file, IOSTAT=', abs (ios)
+    STOP
+    end subroutine search
+    
+    SUBROUTINE str2var(id,string,var)
+    USE system_data_types
+    IMPLICIT NONE
+    CHARACTER, INTENT(in) :: string*(*)
+    CHARACTER, INTENT(out):: var*(*)
+    CHARACTER (len=100) :: read_string
+    INTEGER IOS,ID
+     READ(id,iostat = ios,err=99,FMT='(A)')read_string
+       IF(INDEX(read_string,string).NE.0 ) then
+        var =trim(read_string(INDEX(read_string, '=')+1:len_trim(read_string)))
+        RETURN
+       ENDIF
+     99 PRINT*, 'ERROR!!! No "',TRIM(string),'" block found in psedopotential file,IOSTAT=', abs (ios)
+    STOP
+    END SUBROUTINE str2var
 
 END MODULE

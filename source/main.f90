@@ -11,7 +11,7 @@ PROGRAM main_dftk
   CALL setting_env(t_start)
   CALL initialize
   CALL optimize
-  CALL eprint 
+  IF(ionode)CALL eprint
   CALL closing_env(t_start)
 END PROGRAM main_dftk
 
