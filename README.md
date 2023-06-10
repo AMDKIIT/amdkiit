@@ -1,4 +1,4 @@
-"AMDKIIT" Density Functional Theory program package using a plane-wave basis set.
+AMDKIIT -  Density Functional Theory program package using a plane-wave basis set.
 
 Copyright: 
 This is an open-source (MIT licensed) project. Contribution is welcome.
