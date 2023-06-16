@@ -1,0 +1,4 @@
+[submodule "yaml-cpp"]
+	path = source/yaml-cpp
+	url = https://github.com/jbeder/yaml-cpp.git
+	branch = master
