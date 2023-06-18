@@ -1,5 +1,20 @@
-AMDKIIT -  Density Functional Theory program package using a plane-wave basis set.
+AMDKIIT is a density functional theory program package based on plane-wave basis sets for performing ab initio molecular dynamics at higher rungs of density functionals. This program is getting developed at the Indian Institute of Technology Kanpur through a funding received from the National Supercomputing Mission and Center for Development of Advanced Computing, Pune. 
 
+To compile the code you require the following
+1. CMake version 3.4 or higher
+2. gfortran / ifort compiler
+3. yaml-cpp(https://github.com/jbeder/yaml-cpp) downloaded and copied insied the source directory
+4. Lapack libraries 
+5. FFTW3 libraries 
+6. LIBXC libraries
+See INSTALL for more details
+
+Contributors: 
+1. Prof. Nisanth N. Nair , IIT Kanpur 
+2. Dr. Paramita Ghosh, IIT Kanpur
+3. Dr. Sudhir K. Sahoo, IIT Dharwad
+
+Contact: amdkiit@gmail.com
 Copyright: 
 This is an open-source (MIT licensed) project. Contribution is welcome.
 
