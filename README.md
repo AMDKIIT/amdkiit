@@ -7,6 +7,7 @@ To compile the code you require the following
 4. Lapack libraries 
 5. FFTW3 libraries 
 6. LIBXC libraries
+
 See INSTALL for more details
 
 Contributors: 
