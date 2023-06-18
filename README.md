@@ -3,7 +3,7 @@ AMDKIIT is a density functional theory program package based on plane-wave basis
 To compile the code you require the following
 1. CMake version 3.4 or higher
 2. gfortran / ifort compiler
-3. yaml-cpp(https://github.com/jbeder/yaml-cpp) downloaded and copied insied the source directory
+3. yaml-cpp(https://github.com/jbeder/yaml-cpp) should be downloaded and copied inside the source directory
 4. Lapack libraries 
 5. FFTW3 libraries 
 6. LIBXC libraries
