@@ -1,0 +1,3 @@
+[warn] Epoll ADD(4) on fd 1 failed.  Old events were 0; read change was 0 (none); write change was 1 (add): Operation not permitted
+[hpc748:59591] 39 more processes have sent help message help-mpi-btl-openib-cpc-base.txt / no cpcs for port
+[hpc748:59591] Set MCA parameter "orte_base_help_aggregate" to 0 to see all help / error messages
