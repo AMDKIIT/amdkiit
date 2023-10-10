@@ -1,0 +1,20 @@
+==========================================
+SLURM_CLUSTER_NAME = paramporul
+SLURM_ARRAY_JOB_ID = 
+SLURM_ARRAY_TASK_ID = 
+SLURM_ARRAY_TASK_COUNT = 
+SLURM_ARRAY_TASK_MAX = 
+SLURM_ARRAY_TASK_MIN = 
+SLURM_JOB_ACCOUNT = cdac
+SLURM_JOB_ID = 401187
+SLURM_JOB_NAME = amdkiit_h2o
+SLURM_JOB_NODELIST = hm025
+SLURM_JOB_USER = msccp23
+SLURM_JOB_UID = 43279
+SLURM_JOB_PARTITION = hm
+SLURM_TASK_PID = 15830
+SLURM_SUBMIT_DIR = /home/msccp23/amdkiit-main/tests/1_water/wf_opt
+SLURM_CPUS_ON_NODE = 48
+SLURM_NTASKS = 48
+SLURM_TASK_PID = 15830
+==========================================
