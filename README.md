@@ -7,6 +7,10 @@ To compile the code you require the following
    
    $ unzip yaml-cpp-master.zip
    
+   $ cd source
+   
+   $ rm -r yaml-cpp
+   
    $ mv yaml-cpp-master source/yaml-cpp
 5. Lapack libraries 
 6. FFTW3 libraries 
