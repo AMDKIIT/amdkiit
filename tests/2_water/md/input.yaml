@@ -1,0 +1,49 @@
+# case sensitive
+# specify TASK uisng following keywords only 
+# 'WAVEFUNCTION_OPTIMIZATION' OR 'GEOMETRY_OPTIMIZATION'  
+TASK: MOLECULAR_DYNAMICS
+DYNAMICS:                                                                                           
+  TEMPERATURE: 300.0                                                                                
+  MAX_STEPS: 100                                                                                        
+  TIMESTEP: 0.5                                                                                     
+OPTIMIZATION:
+  WAVEFUNCTION:
+    MINIMIZER: CONJUGATE_GRADIENT
+    MAX_STEPS: 800 
+    GRAD_CUTOFF: 1.0E-006
+  GEOMETRY:
+    MINIMIZER: LBFGS 
+    MAX_STEPS: 100
+    GRAD_CUTOFF: 1.0e-4
+WAVEFUNCTION_CUTOFF:
+    VALUE: 80
+    UNIT: RYDBERG
+SYMMETRY: CUBIC
+CELL:
+  UNIT: ANGSTROM
+  DIMENSION:
+    - 10.00 
+    - 10.00   
+    - 10.00  
+  ANGLE:
+    - 90
+    - 90
+    - 90
+INPUT:
+  COORDINATES_FILE: input_coordinate.xyz
+  UNIT: ANGSTROM
+SPECIES:
+  LABEL1:
+    ATOM: O
+    PP_FILE: O_MT_LDA.psp
+    PP_SCHEME: KLEINMAN-BYLANDER
+    LMAX: P
+  LABEL2:
+    ATOM: H
+    PP_FILE: H_MT_LDA.psp
+    LMAX: S
+OUTPUT:
+  DEBUG: .TRUE.
+  FILE: NONE
+DFT:
+   XC: XC_LDA_XC_TETER93

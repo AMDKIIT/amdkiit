@@ -1,0 +1,21 @@
+Lmod has detected the following error: You can only have one compiler module
+loaded at a time.
+You already have gnu8 loaded.
+To correct the situation, please execute the following command:
+
+  $ module swap gnu8 compiler/gcc/8.3.0
+
+
+While processing the following module(s):
+    Module fullname     Module Filename
+    ---------------     ---------------
+    compiler/gcc/8.3.0  /opt/ohpc/pub/modulefiles/compiler/gcc/8.3.0
+
+--------------------------------------------------------------------------
+WARNING: There was an error initializing an OpenFabrics device.
+
+  Local host:   hm023
+  Local device: mlx5_0
+--------------------------------------------------------------------------
+[hm023:19896] 47 more processes have sent help message help-mpi-btl-openib.txt / error in device init
+[hm023:19896] Set MCA parameter "orte_base_help_aggregate" to 0 to see all help / error messages
