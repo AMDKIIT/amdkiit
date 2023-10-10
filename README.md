@@ -4,9 +4,8 @@ To compile the code you require the following
 1. CMake version 3.4 or higher
 2. gfortran / ifort compiler
 3. yaml-cpp(https://github.com/jbeder/yaml-cpp) should be downloaded and copied inside the source directory
-   \\
-   unzip yaml-cpp-master.zip
-   mv yaml-cpp-master source/yaml-cpp
+   $ unzip yaml-cpp-master.zip
+   $ mv yaml-cpp-master source/yaml-cpp
 5. Lapack libraries 
 6. FFTW3 libraries 
 7. LIBXC libraries
