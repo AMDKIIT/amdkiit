@@ -13,7 +13,7 @@ See INSTALL for more details
 Contributors: 
 1. Prof. Nisanth N. Nair , IIT Kanpur 
 2. Dr. Paramita Ghosh, IIT Kanpur
-3. Dr. Sudhir K. Sahoo, IIT Dharwad
+3. Dr. Sudhir K. Sahoo, IIT Dharwad (Open Shell-LDA)
 
 Contact: amdkiit@gmail.com
 Copyright: 
