@@ -18,7 +18,7 @@ set(CMAKE_Fortran_COMPILER "mpif90")
 #set(CMAKE_Fortran_COMPILER "mpiifort")
 
 
-project(amdkiit VERSION 1.0.0 LANGUAGES CXX C Fortran) 
+project(amdkiit VERSION 1.0.1 LANGUAGES CXX C Fortran) 
 message(STATUS "Project version ${CMAKE_PROJECT_VERSION}")
 
 string(TIMESTAMP CURRENT_TIME "%d-%m-%Y %H:%M:%S")
