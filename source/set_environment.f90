@@ -5,7 +5,7 @@ CONTAINS
   USE mympi
   USE system_data_types
   IMPLICIT NONE
-  INTEGER i,iopt,values(8)
+  INTEGER :: values(8)
   REAL(KIND=dp),INTENT(INOUT):: start
   CHARACTER(len=8) :: date, time
   CHARACTER(10) :: date_str
@@ -24,20 +24,20 @@ CONTAINS
   IF(ionode)write(6,"(5A)")repeat(" ",22),"Program started at : ",trim(date_str),", TIME : ",trim(time_str)
   IF(ionode)write(6,"(A)") repeat("*", 93)
 
-END SUBROUTINE setting_env
-SUBROUTINE closing_env(start)
+  END SUBROUTINE setting_env
+
+  SUBROUTINE closing_env(start)
   USE kinds
   USE mympi
   USE system_data_types
 
   IMPLICIT NONE
-  INTEGER i,iopt,values(8)
+  INTEGER ::values(8)
   REAL(KIND=dp):: finish,start
   CHARACTER(len=8) :: date, time
   CHARACTER(10) :: date_str
   CHARACTER(8)  :: time_str
  
-
   CALL date_and_time(values=values)
 
   ! Format date and time string
@@ -48,15 +48,12 @@ SUBROUTINE closing_env(start)
 
   CALL cpu_time(finish)
   IF(IONODE) write(*,*) "Elapsed Time = ",(finish-start)/60,"min"
-
-
-
 END SUBROUTINE closing_env
+
 SUBROUTINE mpi_init
   USE kinds
   USE mympi
   USE system_data_types
-
   IMPLICIT NONE
     ! MPI Initialization
   CALL MPI_Start
@@ -65,14 +62,12 @@ SUBROUTINE mpi_init
 
   ionode=.FALSE.
   IF(icpu==1)ionode=.TRUE.
-
 END SUBROUTINE mpi_init
 
 SUBROUTINE mpi_final
   USE kinds
   USE mympi
   USE system_data_types
-
   IMPLICIT NONE
   CALL mpi_stop
 END SUBROUTINE mpi_final

@@ -359,6 +359,7 @@ MODULE fft_interface
       !LMSQMAX = NHRM
       !LNZF    = NHG
       !LNZS    = NGW        
+    DEALLOCATE(xrays_pw,ngvy,ngvz) 
   END SUBROUTINE prepare_fft
 
 !based on mltfft

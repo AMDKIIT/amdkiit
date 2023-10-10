@@ -24,7 +24,7 @@ MODULE xc
   REAL(kind=dp) v1xa, v1xb, v2a_, v2ab_, v2b_, v2ca, v2cab, v2cb,  v2xa, v2xab, v2xb
   COMPLEX(KIND=dp), DIMENSION(:), POINTER :: scr_v,scr_vtmp
   COMPLEX(KIND=dp), DIMENSION(:), POINTER :: WORK,vpotg,vpotrb,vpotr
-  COMPLEX(kind=dp), DIMENSION(:,:), POINTER :: VPTG
+  !COMPLEX(kind=dp), DIMENSION(:,:), POINTER :: VPTG
   REAL(kind=dp), DIMENSION(:), allocatable::EX,ro
   REAL(kind=dp), DIMENSION(2):: vpot
   REAL(kind=dp):: vpot_(nnr1)
@@ -32,8 +32,9 @@ MODULE xc
   REAL(kind=dp)vtmp(nnr1),vtmpb(nnr1),vtmpab(nnr1)
   REAL(kind=DP)fact,fact2,fact3
   integer*8 nn
-  !LOGICAL is_lsd_but_not 
-  ALLOCATE(WORK(MAX_FFT),vpotg(ngrho_l),vptg(ngrho_l,nlsd))
+  !LOGICAL is_lsd_but_not
+ 
+  ALLOCATE(WORK(MAX_FFT),vpotg(ngrho_l))!,vptg(ngrho_l,nlsd))
   ALLOCATE(scr_v(MAX_FFT),scr_vtmp(ngrho),vpotr(nnr1),vpotrb(nnr1))
  
      scale=1.0_dp
@@ -59,7 +60,8 @@ if(nlsd==2)CALL grad_cal(rho(:,2),grad(:,5))
             fact3 = 1.0_dp
         ENDIF
 
- IF(.not.LOPEN_SHELL)THEN
+! IF(.not.LOPEN_SHELL)THEN
+IF(NLSD.EQ.1)THEN
      allocate(ex(max_fft),ro(max_fft),vsigma_tot(max_fft,1),vpot_tot(max_fft,1))
      do i = 1, nnr1
        ro(i) = rho(i,nlsd)
@@ -130,7 +132,7 @@ if(nlsd==2)CALL grad_cal(rho(:,2),grad(:,5))
    
     etxc=(sgcc+sgcx)!*parm%omega/REAL(nnrs,kind=real_8)
 
-ELSEIF(LOPEN_SHELL)THEN
+ELSEIF(NLSD.EQ.2)THEN
    allocate(ex(1),ro(2),vsigma_tot(max_fft,3),vpot_tot(max_fft,2))
    vsigma_tot(:,:)=0.0d0
    ex_tot=0.0d0
@@ -426,6 +428,9 @@ ENDIF
     CALL MPI_GlobSumR2s(etxc)   
     
 !   CALL xc_f90_func_end(xc_func)
+
+deallocate(work)
+deallocate(scr_v,scr_vtmp,ex,ro,vsigma_tot,vpot_tot,vpotrb,vpotr,vpotg)
   END SUBROUTINE cal_vpot_ex
 
 SUBROUTINE GRAD_CAL(ro_r,grad)
@@ -487,6 +492,7 @@ ALLOCATE(scr_v(MAX_FFT),scr_vtmp(ngrho))
         GRAD(IR,3)=DREAL(scr_V(IR))
         GRAD(IR,4)=DIMAG(scr_V(IR))
      ENDDO
+deallocate(work,scr_vtmp,scr_v)
     !write(77,*)"#",grad(1,1),grad(1,2),grad(1,3),grad(1,4),ro_r(1)
 END SUBROUTINE
 

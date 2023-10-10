@@ -20,13 +20,14 @@ SUBROUTINE initialize
 
   IMPLICIT NONE
   INTEGER ::i,is,ia
-  IF(ionode)WRITE(6,'(A,I10)'),'Number of MPI processes = ', ncpu
+  IF(ionode)WRITE(6,'(A,I10)')'Number of MPI processes = ', ncpu
 
   ! READ INPUTS
-  PATHOFINPUT='input/'
+  PATHOFINPUT='./'
   if(IONODE)CALL read_and_print
   CALL reading_input
-  CALL readcoordinate(coordinate_file)
+  CALL atom_info
+  !CALL readcoordinate(coordinate_file)
   
   nlp=0!TODO
   gamma_point=.TRUE.
@@ -45,7 +46,7 @@ SUBROUTINE initialize
   cell_volume=get_cell_volume(a_cell)
 
 ! a_1 vector mod is set as this constant
-  a_lattice = DSQRT(a_cell(1,1)**2+a_cell(2,1)**2+a_cell(3,1)**2)
+  a_lattice =  primitive_vec(1)!DSQRT(a_cell(1,1)**2+a_cell(2,1)**2+a_cell(3,1)**2)
   twopibya = 2.0_dp*pi/a_lattice
   twopibya2 = twopibya*twopibya
 
@@ -80,33 +81,42 @@ SUBROUTINE initialize
   IF(IONODE)write(6,"(A)")repeat("*", 93)
   IF(IONODE)write(6,"(A5,3A16,A1,A4,A1,A20)")"TYPE","X    ","Y    ","Z     ","(",coordinate_unit,")","PSEUDOPOTENTIAL"
   IF(IONODE)write(6,"(A)")repeat("-", 93)
-  DO IS=1,sp_t
-   DO IA=1,atom_p_sp(IS)
-     IF(IONODE)write(6,"(A5,3F16.7,A33)")LABEL(IS),(ATCO(I,IA,IS),I=1,3),PPFILE(IS)
-   ENDDO
-  ENDDO 
-  IF(IONODE)write(6,"(A)")repeat("*", 93)
+!  DO IS=1,sp_t
+!   DO IA=1,atom_p_sp(IS)
+!     IF(IONODE)write(6,"(A5,3F16.7,A33)")symbol(z(IS)),(ATCO(I,IA,IS),I=1,3),PPFILE(IS)
+!   ENDDO
+!  ENDDO 
+!  IF(IONODE)write(6,"(A)")repeat("*", 93)
   
   ! Set real space grids (tuned to FFT)
   ALLOCATE(nrgrids(3))
   CALL set_r_grids(a_cell,cutoff%rho,nrgrids)
   CALL read_pp_file
+    DO IS=1,sp_t
+   DO IA=1,atom_p_sp(IS)
+     atmass(z(is))=atom_mass(z(is))* amu_au
+     IF(IONODE)write(6,"(A5,3F16.7,10x,A33)")symbol(z(IS)),(ATCO(I,IA,IS),I=1,3),PPFILE(IS)  ! PG debug
+   ENDDO
+  ENDDO
+  IF(IONODE)write(6,"(A)")repeat("*", 93)
+
+
   CALL set_ngvectors
   CALL set_reciprocal
   CALL prepare_fft
-    if(l_upf)then
+
+  if(l_upf)then
     CALL form_factor_upf
   else
      CALL form_factor
   endif
   CALL exp_igrxfactor !!    STRUCTURE FACTOR CALCULATION
-
   CALL setbasis
   IF(IONODE)WRITE(*,"(A40,I5)") "Total Number of Valence Electrons = ", tn_velec
   IF(IONODE)WRITE(*,"(A40,I5)") "Total Number of Valence Orbital = ",nstate
-  IF(IONODE)WRITE(*,"(A40,13F5.1)") "Occupation = ", (occupation(I),I=1,nstate)
- 
-
+  !IF(IONODE)WRITE(*,"(A40,13F5.1)") "Occupation = ", (occupation(I),I=1,nstate)
+  IF(IONODE)WRITE(*,"(A40)") "Occupation = "
+  IF(IONODE)WRITE(*,"(13F5.1)")(occupation(I),I=1,nstate)
 
   IF(LOPEN_SHELL)THEN
     NSPIN = (MULTIPLICITY-1) ! no of unpaired electron
@@ -121,8 +131,11 @@ SUBROUTINE initialize
   ENDIF
 
   call distribute_orb
+
   call distribute_atom
+
   CALL eval_pot
+
   CALL rhog2r
   CALL cal_vpot_ex
   if(l_upf) then
@@ -144,6 +157,5 @@ SUBROUTINE initialize
     DEALLOCATE(RHO,Rho_G,V_POT)
     ALLOCATE(RHO(NNR1,NLSD),Rho_G(NGRHO_l,NLSD),V_POT(NNR1,NLSD))
     ENDIF
-
 END SUBROUTINE initialize
 END MODULE init_module

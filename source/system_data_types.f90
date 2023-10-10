@@ -17,6 +17,13 @@
    CHARACTER (LEN=80) :: hessian    !<
   END TYPE initialization
 
+!!!!!!!!!!!!!!!!!! RITAMA !!!!!!!!!!!!!!!!!!!!!!!!!
+  TYPE :: dynamics
+   INTEGER:: max_step
+   REAL(KIND=DP) :: temperature, time_step
+  END TYPE dynamics
+!!!!!!!!!!!!!!!!!! RITAMA !!!!!!!!!!!!!!!!!!!!!!!!!
+
   TYPE :: optimization
    CHARACTER (LEN=80) ::minimizer
    INTEGER::max_step
@@ -30,19 +37,21 @@
   
   REAL(KIND=DP) :: order,extrapolate,number,frequency
   CHARACTER (LEN=80)::cell_unit
-  REAL(KIND=DP), DIMENSION(3)::primitive_vec
+  REAL(KIND=DP), DIMENSION(3)::primitive_vec,a_theta
   
   CHARACTER (LEN=80):: coordinate_file,coordinate_unit
-  CHARACTER,DIMENSION(atommax)                :: LABEL
+  !CHARACTER,DIMENSION(atommax)                :: LABEL
   INTEGER:: sp_t,tn_velec
-  CHARACTER (LEN=20), DIMENSION(:), POINTER :: ppfile!,l_max
+  CHARACTER (LEN=80), DIMENSION(:), POINTER :: ppfile
+  CHARACTER (LEN=80)::input_filename
   LOGICAL, DIMENSION(:), POINTER :: tkb   !>True if Kleinman-Bylander separable form
   INTEGER, DIMENSION(:), POINTER :: skip,l_local,atom_p_sp,lmax
-  REAL(KIND=DP), DIMENSION(:), POINTER ::atom_mass
+  !REAL(KIND=DP), DIMENSION(:), POINTER ::atom_mass
   
 
   TYPE(unit_data):: units
   TYPE(initialization):: init
+  TYPE(dynamics):: md !RITAMA
   TYPE(optimization):: wf_opt
   TYPE(optimization):: geo_opt
   TYPE(cut_off)::cutoff  !> Real space
@@ -58,7 +67,7 @@
                    twopibya, &
                    twopibya2
   INTEGER       :: symmetry
-  CHARACTER (LEN=20)::symmetry_str 
+  CHARACTER (LEN=30)::symmetry_str 
   REAL(KIND=dp) :: rr(splnmax,atommax)
   INTEGER       :: atom_t,na_max
   REAL(KIND=dp) :: rw(splnmax,spmax)
@@ -72,7 +81,7 @@
   INTEGER       ::  nghtol(120,spmax),nghcom(120,spmax)! HOW TO CALCULATE NHX
   INTEGER       :: ngh(spmax),nl_angmom !TOTAL NUMBER OF NON-LOCAL ANGULAR MOMENTUM
   REAL(KIND=dp) :: foc(20),E_OLD
-  REAL(KIND=dp) :: wns(nspln,2,5,spmax) !ggng(1:nspln),ggnh(1:nspln),wns(nspln,2,5,spmax)!define in pseudopotential file
+  REAL(KIND=dp) :: wns(nspln,2,5,spmax)!,wns(nspln,2,5,spmax)!define in pseudopotential file
   INTEGER(8)    :: NNR1
   INTEGER       :: ngpw, &   !Number of planewaves (< Gcutoff%pw)
                    ngrho,&   !Number of planewaves (< Gcutoff%rho)
@@ -84,11 +93,18 @@
                    !nnr1,&      !Total Number of grids (nx * ny * nz without distributing over processors)
                    g0_ip     !Processor ID holding g0
   LOGICAL       :: gamma_point, &
-                   ionode,debug,&
+                   ionode,debug,print_density,&
                    g0_stat,&  !TRUE if the processor is holding the g0 component 
                    tfor
   !REAL(KIND=dp) :: primitive_vec(3)
   REAL(KIND=dp) :: eke      !Kinetic Energy
+!######################################### RITAMA ##########################################
+  REAL(KIND=dp) :: atke, atpe, atte!, com(3)      !Atomic Kinetic Energy 
+  REAL(KIND=dp) :: temperature,temp_inst      !Temperature (in K) 
+  REAL(KIND=dp) :: time_step_fs, time_step ! Time Step (in fs) 
+  INTEGER       :: maxmd !maximum number of MD step
+  INTEGER       :: ndof !Degrees of Freedom
+!######################################### RITAMA ##########################################
   INTEGER       :: nlp !Number of lattice point
   REAL(KIND=dp) :: atwt(99)
       DATA atwt /1.00797d0,  4.0026d0,    6.939d0,   9.0122d0,   10.811d0,&
@@ -152,6 +168,7 @@
   REAL(KIND=dp)                                   :: charge 
   REAL(KIND=dp),    DIMENSION(:,:,:),     POINTER :: atco  !atomic coordinates
   REAL(KIND=dp),    DIMENSION(:),         POINTER :: atcharge  !atomic charge
+  REAL(KIND=dp),    DIMENSION(:,:,:),     POINTER :: atvel  !atomic velocities !RITAMA
   !LOGICAL,          DIMENSION(:),         POINTER :: tkb   !True if Kleinman-Bylander separable form
   !INTEGER,          DIMENSION(:),         POINTER :: l_max!,skip,l_local,atom_p_sp
   INTEGER,          DIMENSION(:),         POINTER :: z,zv,xc_fun,meshv,meshw
@@ -167,6 +184,8 @@ INTEGER NSHELL(2)     !Number of shell n per species
 INTEGER LSHELL(20,2)  !Number of orbital per species 
 INTEGER M1SHL,e_config(4,7,99)
 CHARACTER(LEN=2) SYMBOL(99)
+REAL(dp), DIMENSION(99) :: atom_mass
+REAL(dp), DIMENSION(99) :: atmass
 REAL(kind=dp), DIMENSION(:),  POINTER ::OCCUPATION !NSTATE !TODO
 INTEGER nattot   !Total number of  orbitals
 INTEGER, DIMENSION(:),   POINTER:: NUMAOR !Number of  orbitals per species
@@ -214,4 +233,5 @@ LOGICAL :: L_UPF
 LOGICAL LOPEN_SHELL,is_lsd_but_not
 INTEGER MULTIPLICITY, NSPIN, NEL_UP, NEL_DOWN, NLSD
 !Sudhir DBG 
+REAL(KINd=DP) DTBYM(9)
 END MODULE system_data_types

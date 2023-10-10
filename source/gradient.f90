@@ -9,7 +9,7 @@
      USE mympi
      USE kinds
      IMPLICIT NONE
-     INTEGER I,J!,IB,IS1,IS2,IBB,NSTA,NOSTATE
+     INTEGER I,J
      REAL(kind=dp) GAM(NSTATE,NSTATE),FSC(NSTATE)
 
             DO I=1,NSTATE
@@ -41,7 +41,6 @@
      IMPLICIT NONE
 
        INTEGER NOCC,I,IIABS
-     ! REAL*8 GEMAX
        complex*16 C_2g(NGPW_L,1)
           NOCC=0
           DO I=1,NSTATE
@@ -90,8 +89,9 @@
       ENDDO
       RETURN
       END
+
      !***********************************************************************
-     SUBROUTINE CHK_CNVGRAD (CONV_WF, GMAX)
+     SUBROUTINE CHK_CNVGRAD(CONV_WF, GMAX)
      !    == CHECK IF WAVEFUNCTION IS CONVERGED BASED ON GRADIENT         ==
      USE kinds
      USE system_data_types

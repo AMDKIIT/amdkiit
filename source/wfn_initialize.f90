@@ -5,7 +5,6 @@ MODULE wfn_initialize
   USE kinds
   USE mympi, ONLY : MPI_GlobSumC,MPI_GlobSumR2s,MPI_RBcast,MPI_GlobSumR2
   USE system_data_types
-  !USE splnpack
   USE pseudopotential
   IMPLICIT NONE
   REAL(KIND=dp) :: sfc
@@ -14,25 +13,29 @@ MODULE wfn_initialize
   COMPLEX*16, DIMENSION(:,:),ALLOCATABLE :: work
   COMPLEX*16::ci,CATOM(ngpw_l,NATTOT)
   DATA       LPP /0,1,4,9,16/ 
-  REAL(kind=dp) vol,cc 
+  REAL(kind=dp) vol!,cc 
   REAL(kind=dp) DDOT,FC(20)!,SCR(73083)
-  real(kind=dp), DIMENSION(:),ALLOCATABLE :: scr
+  real(kind=dp), DIMENSION(:),ALLOCATABLE :: ggng,n_cc
+  
   EXTERNAL DDOT
-  REAL(kind=dp)   ggng(1:nspln),OVLAP_MAT(NATTOT,NATTOT),XMATAT(NATTOT,NATTOT),XSMAT(NATTOT,NATTOT),WORKAT(3*NATTOT),EIVAT(NATTOT)
-     DO il=1,nspln
-     ggng(il)=(il-1)*(Gcutoff%pw)/DBLE(nspln-1)
-   ENDDO
+  REAL(kind=dp) OVLAP_MAT(NATTOT,NATTOT),XMATAT(NATTOT,NATTOT),XSMAT(NATTOT,NATTOT),WORKAT(3*NATTOT),EIVAT(NATTOT)
 
   IF(nstate<=0.OR.ngpw_l<=0)STOP 'Error! nstate/ngw is not initialized'
-  IF(.NOT.ASSOCIATED(psi))THEN
-  ALLOCATE(psi(ngpw_l,nstate)) 
-  ELSE
-  IF(SIZE(psi,1)/=ngpw_l)STOP 'Error! psi - array size mismatch'
-  IF(SIZE(psi,2)/=nstate)STOP 'Error! psi - array size mismatch'
-  END IF
-  ALLOCATE(C_0(NGPW_l,NSTATE),C2(NGPW_l,nstate))    
+  !IF(.NOT.ASSOCIATED(psi))THEN
+  !ALLOCATE(psi(ngpw_l,nstate)) 
+  !ELSE
+  !IF(SIZE(psi,1)/=ngpw_l)STOP 'Error! psi - array size mismatch'
+  !IF(SIZE(psi,2)/=nstate)STOP 'Error! psi - array size mismatch'
+  !END IF
+
+  ALLOCATE(C_0(NGPW_l,NSTATE),C2(NGPW_l,nstate),ggng(nspln),n_cc(ngpw_l))    
+
+  DO IL =1,nspln
+    ggng(il)=(il-1)*(Gcutoff%pw)/DBLE(nspln-1)
+  ENDDO
+  
     C_0(:,:)=(0._dp,0._dp)
-    psi(:,:)=(0._dp,0._dp)
+   ! psi(:,:)=(0._dp,0._dp)
     OVLAP_MAT(:,:)=0._dp
     CATOM(:,:)=(0.0d0,0.0d0)
     IAORB=1
@@ -47,27 +50,22 @@ MODULE wfn_initialize
              L=LSHELL(ISH,IS)
              CI=(0.0D0,1.0D0)**L
              LL=2*L+1
+             CALL spline_inter(nspln,ggng,cat(1,1,ish,is),hg(1),n_cc(1),NGPW_l)
             DO IV=1,LL
                LXX=LXX+1
                ORB=ORB+1
                LY=LPP(L+1)+IV
               DO IG=1,NGPW_l
-                 CALL spline_inter(nspln,ggng,cat(1,1,ish,is),hg(ig),cc,0.0d0,1)
-         
-                 CATOM(IG,orb)=CI*YLG(LY,IG,gvec(1:3,1))*CC*EIGR(IG,IAT)*vol
-             
-           
+                 CATOM(IG,orb)=CI*YLG(LY,IG,gvec(1:3,1))*n_CC(ig)*EIGR(IG,IAT)*vol
               ENDDO
                FOC(LXX)=OC(ISH,IS)/DBLE(LL)
             ENDDO
           ENDDO
 
-          !if(icpu==1)write(2222,*)catom(1,1),is,ia
           NATST=LXX
           DO IXX=IAORB,IAORB+NATST-1
         
             SFC=DOTP(NGPW_l,CATOM(1,IXX),CATOM(1,IXX))
-           !if(icpu==1)write(2223,*)SFC
             CALL MPI_GlobSumR2s(SFC)
             IF(SFC.EQ.0.D0) THEN
               WRITE(6,'(A,A,I5,A)') ' ATRHO|',&
@@ -88,7 +86,6 @@ MODULE wfn_initialize
       CALL GS_DISORTHO(NATTOT,CATOM) 
       
       IST=1
-
      if(l_upf)then
       DO IS=1,sp_t
         DO IA=1,atom_p_sp(IS)
@@ -115,7 +112,6 @@ MODULE wfn_initialize
         ENDDO
         ENDdo
       endif
-    
     CALL DSCAL(NATTOT*NATTOT,-1.D0,OVLAP_MAT(1,1),1)
 
     CALL OVLAP_D(NGPW_l,NATTOT,NATTOT,XSMAT,CATOM,CATOM)
@@ -144,6 +140,7 @@ MODULE wfn_initialize
      ENDIF
    ENDIF
 !================================================
+DEALLOCATE(GGNG,n_cc,cat,oc,NUMAOR)
 RETURN
 END SUBROUTINE wfn_initialize_orb
 
@@ -186,46 +183,34 @@ END SUBROUTINE wfn_initialize_orb
 
 
 
-      SUBROUTINE SUMMAT(A,NSTAT)!,SCR,LSCR)
-      USE system_data_types
-      USE mympi
-      !USE utils
-      USE kinds
-      IMPLICIT NONE
-      INTEGER NSTAT,LSCR
-      REAL(kind=dp)  A(NSTAT,NSTAT)!,SCR(LSCR)
-      REAL(kind=dp), DIMENSION(:),ALLOCATABLE :: SCR
-      INTEGER N2,NTR,K,I,J
-!     ==--------------------------------------------------------------==
-!     == GLOBAL SUMMATION OF A SYMMETRIC MATRIX                       ==
-!     ==--------------------------------------------------------------==
-      IF(ncpu.LE.1) RETURN
-      N2 = NSTAT*NSTAT
-      NTR = (NSTAT*(NSTAT+1))/2
-      ALLOCATE(SCR(NTR))
-      SCR=0.0
-      DO I=1,NSTAT
-        DO J=I,NSTAT
-          K=I+(J*(J-1))/2
-          SCR(K)=A(I,J)
-          !if(icpu==1)write(6,*)i,j,"kk",I,J,A(I,J)
-        ENDDO
-      ENDDO
-      CALL MPI_GlobSumR2(A,N2)
-      !CALL MPI_GlobSumR2(SCR,NTR)
-      !CALL COPY(NTR,A(1,1),1,SCR(1),1)
-      
-      DO I=1,NSTAT
-        DO J=I,NSTAT
-          K=I+(J*(J-1))/2
-       !   A(I,J)=SCR(K)
-       !   A(J,I)=SCR(K)
-       ! if(icpu==1)write(6,*)"KK",I,J,A(I,J)
-        ENDDO
-      ENDDO
-
-      RETURN
-END SUBROUTINE
+!      SUBROUTINE SUMMAT(A,NSTAT)!,SCR,LSCR)
+!      USE system_data_types
+!      USE mympi
+!      !USE utils
+!      USE kinds
+!      IMPLICIT NONE
+!      INTEGER NSTAT,LSCR
+!      REAL(kind=dp)  A(NSTAT,NSTAT)!,SCR(LSCR)
+!      REAL(kind=dp), DIMENSION(:),ALLOCATABLE :: SCR
+!      INTEGER N2,NTR,K,I,J
+!      ==--------------------------------------------------------------==
+!      == GLOBAL SUMMATION OF A SYMMETRIC MATRIX                       ==
+!      ==--------------------------------------------------------------==
+!      IF(ncpu.LE.1) RETURN
+!      N2 = NSTAT*NSTAT
+!      NTR = (NSTAT*(NSTAT+1))/2
+!      ALLOCATE(SCR(NTR))
+!      SCR=0.0
+!      DO I=1,NSTAT
+!        DO J=I,NSTAT
+!          K=I+(J*(J-1))/2
+!          SCR(K)=A(I,J)
+!          !if(icpu==1)write(6,*)i,j,"kk",I,J,A(I,J)
+!        ENDDO
+!      ENDDO
+!      CALL MPI_GlobSumR2(A,N2)      
+!      RETURN
+!      END SUBROUTINE
 
 
 
@@ -375,6 +360,8 @@ ALLOCATE(PSY(MAX_FFT))
                 ENDDO
               ENDDO
            ENDDO!IA
+          DEALLOCATE(PSY)
+
 END SUBROUTINE vpsi
 
       FUNCTION YLG(L,IG,GK)
@@ -449,7 +436,7 @@ END SUBROUTINE vpsi
     INTEGER K,IG
 
         DO K=1,NSTATE
-          DO IG=1,NGPW
+          DO IG=1,NGPW_L
            !write(33,*)IG,C_0(IG,K),C2(IG,K)
             C_0(IG,K)=C_0(IG,K)+LAMBDA*C2(IG,K)
           ENDDO
@@ -464,7 +451,6 @@ END SUBROUTINE vpsi
       USE mympi
       IMPLICIT NONE
       REAL(kind=dp),DIMENSION(:,:),ALLOCATABLE :: SMAT
-      !REAL(kind=dp)     SMAT(NSTATE*NSTATE)
       COMPLEX*16 CP(NGPW_L,*)
       INTEGER    ISUB
       IF(NSTATE.LE.0) RETURN
@@ -508,6 +494,7 @@ END SUBROUTINE vpsi
       !CALL UINV('U',SMAT,NSTATE,NSTATE)
       !IF(NGPW_L.GT.0)CALL DTRMM('R','U','N','N',2*NGPW_L,NSTATE,1.D0,SMAT,NSTATE,CP,2*NGPW_L)
       !IF(g0_stat) CALL ZCLEAN(CP,NSTATE,NGPW_L)!todo
+      DEALLOCATE(SMAT)
       RETURN
       END
 
@@ -570,68 +557,59 @@ END SUBROUTINE vpsi
       RETURN
       END
 
-      SUBROUTINE FNONLOC(CA,NOSTATE,FC)
-      USE kinds
-      USE system_data_types
-      USE constants
-      USE pseudopotential
-      IMPLICIT NONE
-      INTEGER IA,ISA,ISA0,IS,IV,I,IG,J,NOSTATE
-      COMPLEX*16, INTENT(INOUT):: CA(NGPW_L,NOSTATE)!,AUXC(NGPW_L,NOSTATE)
-      COMPLEX*16 ci,AUXC(NGPW_L,NOSTATE),EGR(NGPW_L,NA_MAX),C2_l(NGPW_L,NOSTATE)
-      REAL(kind=dp)  DDIA(NA_MAX,NOSTATE),FC(NOSTATE),FFI,T,EI,ER
-      COMPLEX*16 CTM
-      AUXC=(0.0D0,0.0D0)
-      c2_l=(0.0_dp,0.0_dp)
-!------------------------------------------------------------------------
-      ISA0=0
+    SUBROUTINE FNONLOC(CA,NOSTATE,FC)
+    USE kinds
+    USE system_data_types
+    USE constants
+    USE pseudopotential
+    IMPLICIT NONE
+    INTEGER NOSTATE
+    COMPLEX*16, INTENT(INOUT):: CA(NGPW_L,NOSTATE)
+    REAL(kind=dp) FC(NOSTATE)
+
+    INTEGER IA,ISA,ISA0,IS,IV,I,IG,J
+    COMPLEX*16 AUXC(NGPW_L,NOSTATE),C2_l(NGPW_L,NOSTATE)
+    REAL(kind=dp) DDIA(NA_MAX,NOSTATE),FFI,T
+    COMPLEX*16 CTM
+
+    AUXC=(0.0D0,0.0D0)
+    c2_l=(0.0_dp,0.0_dp)
+    ISA0=0
+
       DO IS=1,sp_t
-          DO IV=1,NGH(IS)
-             DDIA=0.0D0
-             DO I=1,NOSTATE
-                CALL DCOPY(atom_p_sp(IS),NL(1,ISA0+1,IV,I),1,DDIA(1,I),1)
-             ENDDO
-!-------------
-    do ig=1,NA_maX
-      do ia=1,nostate
-      !write(81,*)"*",DDIA(ig,ia),ig,ia,IS
-      enddo
-      enddo
-      !write(81,*)"END"
-       !  write(81,*)"M=",2*NGPW_L,"N=",NOSTATE,"K=",atom_p_sp(IS),NA_MAX,C2(1,1),CA(1,1)          
-              !CALL MATRIX_MULTI(2*NGPW_L,NOSTATE,atom_p_sp(IS),NA_MAX,EIGR,DDIA,AUXC)
-             IF(NGPW_L.GT.0) THEN
-              CALL DGEMM('N','N',2*NGPW_L,NOSTATE,atom_p_sp(IS),1.D0,EIGR_pw(1,ISA0+1),2*NGPW_L,DDIA,NA_MAX,0.0D0,AUXC,2*NGPW_L)
-               ! WRITE(81,*)"AUXC",AUXC(1,1),AUXC(1,2)
-               DO I=1,NOSTATE
-                 CTM=(0.0D0,-1.0D0)**NGHTOL(IV,IS)
-                 FFI=FC(I)
-                 IF(FFI.LT.1.D-5) FFI=1.0D0
-                 T=-FFI*WSG(IS,IV)
-                 CTM=CTM*T
-                 DO IG=1,NGPW_L
-                   AUXC(IG,I)=CTM*AUXC(IG,I)
-                   C2_L(IG,I)=C2_L(IG,I)+TWNL(IG,IV,IS)*AUXC(IG,I)
-                   
-                 ENDDO
-               ENDDO
-             ENDIF
+        DO IV=1,NGH(IS)
+          DDIA=0.0D0
+          DO I=1,NOSTATE
+             CALL DCOPY(atom_p_sp(IS),NL(1,ISA0+1,IV,I),1,DDIA(1,I),1)
           ENDDO
+
+          IF(NGPW_L.GT.0) THEN
+            CALL DGEMM('N','N',2*NGPW_L,NOSTATE,atom_p_sp(IS),1.D0,EIGR_pw(1,ISA0+1),2*NGPW_L,DDIA,NA_MAX,0.0D0,AUXC,2*NGPW_L)
+            DO I=1,NOSTATE
+              CTM=(0.0D0,-1.0D0)**NGHTOL(IV,IS)
+              FFI=FC(I)
+              IF(FFI.LT.1.D-5) FFI=1.0D0
+              T=-FFI*WSG(IS,IV)
+              CTM=CTM*T
+              DO IG=1,NGPW_L
+                AUXC(IG,I)=CTM*AUXC(IG,I)
+                C2_L(IG,I)=C2_L(IG,I)+TWNL(IG,IV,IS)*AUXC(IG,I)                   
+              ENDDO
+            ENDDO
+          ENDIF
+        ENDDO
       ISA0=ISA0+atom_p_sp(IS)
       ENDDO
-  IF (NGPW_L.GT.0.AND.NGPW.GT.0) THEN
-     ! copy back to the right C0 block
-     DO i=1,nostate
-        DO j=1,ngpw_l
-           CA(j,i) = CA(j,i) + C2_l(j,i)
+
+      IF (NGPW_L.GT.0.AND.NGPW.GT.0) THEN
+        DO i=1,nostate
+          DO j=1,ngpw_l
+            CA(j,i) = CA(j,i) + C2_l(j,i)
+          ENDDO
         ENDDO
-     ENDDO
-ENDIF
-
-   ! ==--------------------------------------------------------------==
-  RETURN
-
-      END
+      ENDIF
+    RETURN
+    END
 
       SUBROUTINE UPF_FNONLOC(CA,NOSTATE,FC)
       USE kinds
@@ -729,7 +707,7 @@ END SUBROUTINE
 
       IMPLICIT NONE
       INTEGER N_STATE
-      COMPLEX*16 C0(NGPW,*)
+      COMPLEX*16 C0(NGPW_L,*)
       INTEGER NORB,NORBX,MMX,MSGLEN,IP,NX,IPJ,NPJ,IPI,NPI
       INTEGER I,J,I1,J1,IJ,N1,N2,INFO,I2,MMX1
       INTEGER ISUB

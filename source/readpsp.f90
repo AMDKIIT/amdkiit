@@ -21,8 +21,8 @@ MODULE READpsp
 
   CHARACTER LINE*80, PATHOFPP*42
   TNUM(ISP)=.FALSE.
-
-     OPEN(UNIT=IUNIT,FILE=trim(PATHOFINPUT)//'PSEUDOPOTENTIAL/'//pspfile,IOSTAT=ios)
+     OPEN(UNIT=IUNIT,FILE=trim(PATHOFINPUT)//pspfile,IOSTAT=ios)
+     !OPEN(UNIT=IUNIT,FILE=trim(PATHOFINPUT)//'PSEUDOPOTENTIAL/'//pspfile,IOSTAT=ios)
        IF(ios.NE.0)THEN
          IF(ionode)WRITE(*,*)"    Reading ",pspfile," is not successful"
          STOP
@@ -36,7 +36,6 @@ MODULE READpsp
        CALL str2var(iunit,"XC",line)
        CALL str2var(iunit,"TYPE",line)
        IF(INDEX(line,'NUMERIC').NE.0)tnum(isp)=.TRUE.
-       print*,tnum(isp)
        CALL search(IUNIT,"END")
        !INFO section
        CALL search(IUNIT,"INFO")
@@ -61,9 +60,8 @@ MODULE READpsp
          ENDDO
        CALL search(IUNIT,"END")
       IF(meshw(isp).NE.meshv(isp))WRITE(6,*)"ERROR:INCOMPATIBLE MESHES....",meshw(isp),meshv(isp)
-
     RETURN
-
+    
     20 WRITE(*,*) "Error occurred while reading file"
     STOP
     END SUBROUTINE read_psp

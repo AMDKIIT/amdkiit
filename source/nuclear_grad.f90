@@ -21,6 +21,8 @@
           rhog=rhet+rp
           rhets=dconjg(rhet)
           rhogs=dconjg(rhog)
+          !write(49,*)"rp",rp
+          !write(49,*)"rh",rhet
           gx=dcmplx(0.d0,gvec(1,ig))
           gy=dcmplx(0.d0,gvec(2,ig))
           gz=dcmplx(0.d0,gvec(3,ig))
@@ -30,12 +32,15 @@
             txx=(rhos(is,ig)*vcgs+vps(is,ig)*rhets)*gx
             tyy=(rhos(is,ig)*vcgs+vps(is,ig)*rhets)*gy
             tzz=(rhos(is,ig)*vcgs+vps(is,ig)*rhets)*gz
+            !write(47,*)gz!(DCMPLX(fourpi/(twopibya2*hg(ig)),0.D0))
             do ia=1,atom_p_sp(is)
               isa=isa+1
-              !ei123=ei1(isa,inyh(1,ig))*ei2(isa,inyh(2,ig))*ei3(isa,inyh(3,ig))
+              !write(46,*)"tzz=",tzz,"eigr=",eigr(ig,isa)!)!*tzz)*omtp
+              !write(46,*) "tzz*eigr=",eigr(ig,isa)*tzz
               force(1,ia,is)=force(1,ia,is)+dreal(eigr(ig,isa)*txx)*omtp
               force(2,ia,is)=force(2,ia,is)+dreal(eigr(ig,isa)*tyy)*omtp
-              force(3,ia,is)=force(3,ia,is)+dreal(eigr(ig,isa)*tzz)*omtp
+              force(3,ia,is)=force(3,ia,is)+real(eigr(ig,isa)*tzz)*omtp
+              !write(46,*)"*",force(3,ia,is)
             enddo
           enddo
         enddo
@@ -51,8 +56,6 @@
          USE kinds
          IMPLICIT NONE
 
-       !REAL*8  DFNL(IMAGP,NAT,NHXS,3,NDFNL,NKPOINT),
-       !&        FNL(IMAGP,LDF1,NHXS,NSTATE,NKPOINT),
       REAL(KIND=DP)        WEIGHT,TEMP!,TT,TDBL
       INTEGER ISUB,IK,ISA0,IS,IV,JV,I,II,ISPIN,ISA,L,KI,LI,L2,LJ,KJ,IA
       real(KIND=DP)  wk1_1,wk1_2,wk1_3,wk2_1,wk2_2,wk2_3
@@ -82,7 +85,7 @@
             
             ISA0 = ISA0 + atom_p_sp(IS)
           ENDDO
-
+       DEALLOCATE(DFNL)
        END SUBROUTINE
        SUBROUTINE UPF_D_FNL
        USE system_data_types
@@ -183,10 +186,6 @@ CALL UPF_D_FNL
                                      force(1,ia,is)=force(1,ia,is)-tt*nl(1,isa,jv,i)*dfnl(1,isa,iv,1,ii)
                                      force(2,ia,is)=force(2,ia,is)-tt*nl(1,isa,jv,i)*dfnl(1,isa,iv,2,ii)
                                      force(3,ia,is)=force(3,ia,is)-tt*nl(1,isa,jv,i)*dfnl(1,isa,iv,3,ii)
-                                     write(70,*)tt
-                                     write(71,*)dfnl(1,isa,iv,1,ii),isa,iv,ii
-                                     write(72,*)force(1,ia,is)
-                                     write(73,*)nl(1,isa,jv,i),isa,jv,i
                                    ENDDO
                                         
                          ENDIF
@@ -267,29 +266,49 @@ END SUBROUTINE
 
 
 
-    subroutine PRINT_COORDINATE(a,n,o,totatom,totenergy,gopt_step)
+    subroutine PRINT_COORDINATE(a,forc,n,o,totatom,totenergy,gopt_step)
     USE kinds
     USE system_data_types
 
     implicit none
 
     integer, intent(in) :: n,o,totatom,gopt_step
-    REAL(KIND=DP), intent(in) :: a(3,n,o),totenergy
+    REAL(KIND=DP), intent(in) :: a(3,n,o),forc(3,n,o),totenergy
+
     INTEGER I,J,K
     
     if(ionode)then
     !file_name = 'GEOOPT.xyz'!// trim(adjustl(file_id)) // '.xyz'
-    open(12,file = 'atom_co.xyz')!trim(file_name))
+!!    open(12,file = 'atom_coord.xyz')!trim(file_name))
+    OPEN(12,FILE="atom_coord.xyz",STATUS="unknown",position="APPEND")
+
     WRITE(12,*)totatom
-    write(12,*)"ENERGY=",totenergy!,"GRADIENT=",gnorm
+    write(12,*)"ENERGY=",totenergy, gopt_step!!"GRADIENT=",gnorm
          do k = 1, o
           do j = 1, atom_p_sp(k)
-            write(12,*),SYMBOL(z(j)),((a(i,j,k)*0.529177),i=1,3)!,(force(IS,K,J),is=1,3)
+           write(12,*)SYMBOL(z(k)),((a(i,j,k)*0.529177),i=1,3)!,(force(IS,K,J),is=1,3)!0.529177
 
            end do
          end do
-    write(12,*)"   "
+!    write(12,*)"   " ## RK edit
+    CLOSE(12)
     endif
+    
+    if(ionode)then
+    !open(13,file = 'atom_force.dat')!trim(file_name))
+    OPEN(13,FILE="atom_force.dat",STATUS="unknown",position="APPEND")
+    WRITE(13,*)totatom
+    write(13,*)"ENERGY=",totenergy, gopt_step!!"GRADIENT=",gnorm
+         do k = 1, o
+          do j = 1, atom_p_sp(k)
+            write(13,*)SYMBOL(z(k)),((forc(i,j,k)*1),i=1,3)!,(force(IS,K,J),is=1,3)!0.529177
+
+           end do
+         end do
+!    write(13,*)"   " 
+    CLOSE(13)
+    endif
+
     end subroutine
 
        SUBROUTINE D_FNL

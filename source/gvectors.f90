@@ -12,7 +12,7 @@ MODULE gvectors
 
 !    REAL(KIND=dp), ALLOCATABLE :: gsq_mat(:)
     INTEGER :: nr1,nr2,nr3,ix,iy,iz,ymin,ymax,zmin,zmax
-    REAL*8  :: gsq
+    REAL(KIND=DP)  :: gsq
 !Construction of g-vectors
     nr1=nrgrids(1) 
     nr2=nrgrids(2) 
@@ -121,8 +121,8 @@ MODULE gvectors
                         ix,iy,iz,ii,ip,ipp,icpu1,in1,in2,in3,ngrays,nhrays,ig,ihrays,img,&
                         ymin,ymax,zmin,zmax
     INTEGER,       DIMENSION(:,:), POINTER :: mgpa
-    REAL*8 :: sign,gsq
-    REAL*8, PARAMETER :: EPSGX=1.D-12
+    REAL(kind=dp) :: sign,gsq
+    REAL(kind=dp), PARAMETER :: EPSGX=1.D-12
 
 !Below sets the variable mapping for compatibility with CPMD routines <TODO:Change>
     nr1=nrgrids(1) ; nr2=nrgrids(2) ; nr3=nrgrids(3)
@@ -348,12 +348,12 @@ MODULE gvectors
     IMPLICIT NONE
 
     INTEGER, POINTER, INTENT(OUT) :: iray(:,:)
-    REAL*8, INTENT(IN)            :: gcut
+    REAL(KIND=DP), INTENT(IN)            :: gcut
 
     INTEGER :: nr1,nr2,nr3,nh1,nh2,nh3,&
                ix,iy,iz,xmax,xmin,ymax,ymin,zmax,zmin,&
                in2,in3,id2,id3,ir1,ir2
-    REAL*8  :: gsq
+    REAL(KIND=DP)  :: gsq
 
     !print *, 'xfft| gcut=',gcut
     iray(:,:)=0
@@ -417,13 +417,13 @@ MODULE gvectors
     IMPLICIT NONE
 
     INTEGER, INTENT(INOUT) :: iray(:,:)
-    REAL*8  :: gcut
+    REAL(kind=dp)  :: gcut
 
     INTEGER :: nh1,nh2,nh3,nr1,nr2,nr3,&
                ix,iy,iz,xmin,xmax,ymin,ymax,zmin,zmax,&
                in1,in2,in3,id1,id2,id3,icpu1,icpu2
 
-    REAL*8 :: gsq
+    REAL(kind=dp) :: gsq
 
     nr1=nrgrids(1)
     nr2=nrgrids(2)
@@ -498,10 +498,11 @@ MODULE gvectors
 
 !Returns the value of G^2 for a given grid index (ix,iy,iz)
   FUNCTION Gsquare(ix,iy,iz,b_cell) RESULT(gsq)
+    USE KINDS
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: ix,iy,iz
-    REAL*8, INTENT(IN)  :: b_cell(3,3)
-    REAL*8              :: gsq
+    REAL(kind=dp), INTENT(IN)  :: b_cell(3,3)
+    REAL(kind=dp)             :: gsq
 
     gsq= (DBLE(ix)*b_cell(1,1)+DBLE(iy)*b_cell(1,2)+DBLE(iz)*b_cell(1,3))**2 + &
          (DBLE(ix)*b_cell(2,1)+DBLE(iy)*b_cell(2,2)+DBLE(iz)*b_cell(2,3))**2 + &
@@ -512,11 +513,12 @@ MODULE gvectors
 
   SUBROUTINE sort_gvectors(hg,inyh,ngrho_l)
   USE math, ONLY : sort_array2
+  USE kinds
   IMPLICIT NONE
 !
   INTEGER          :: ngrho_l
   INTEGER, POINTER :: inyh(:,:)
-  REAL*8, POINTER  :: hg(:)
+  REAL(KIND=DP), POINTER  :: hg(:)
 !
   INTEGER, ALLOCATABLE :: g_index(:)
   INTEGER ig, jg, ind(3), iii
@@ -744,6 +746,7 @@ MODULE gvectors
 
     IMPLICIT NONE
     INTEGER :: ix,iy,iz,ig,nh1,nh2,nh3
+    REAL(KIND=DP) T1,T2,T3
 
     nh1=nrgrids(1)/2+1
     nh2=nrgrids(2)/2+1
@@ -763,16 +766,20 @@ MODULE gvectors
         gvec(2,ig)=(DBLE(ix)*b_cell(2,1)+DBLE(iy)*b_cell(2,2)+DBLE(iz)*b_cell(2,3))
         gvec(3,ig)=(DBLE(ix)*b_cell(3,1)+DBLE(iy)*b_cell(3,2)+DBLE(iz)*b_cell(3,3))
 
-        hg(ig)=DOT_PRODUCT(gvec(1:3,ig),gvec(1:3,ig))
-    ENDDO
+        !t1=(DBLE(ix)*b_cell(1,1)+DBLE(iy)*b_cell(2,1)+DBLE(iz)*b_cell(3,1))
+        !t2=(DBLE(ix)*b_cell(1,2)+DBLE(iy)*b_cell(2,2)+DBLE(iz)*b_cell(3,2))
+        !t3=(DBLE(ix)*b_cell(1,3)+DBLE(iy)*b_cell(2,3)+DBLE(iz)*b_cell(3,3))
 
+        !hg(ig)=t1*t1+t2*t2+t3*t3
+         hg(ig)=DOT_PRODUCT(gvec(1:3,ig),gvec(1:3,ig))
+    ENDDO
   END SUBROUTINE compute_gvec_gvec2
   SUBROUTINE DISTRIBUTE_ORB
   !     DISTRIBUTE ORBITALS
   !   ==--------------------------------------------------------------==
   USE KINDS
   USE SYSTEM_DATA_TYPES
-  REAL*8     XSTATES,XSNOW,XSAIM
+  REAL(KIND=DP)    XSTATES,XSNOW,XSAIM
   ALLOCATE(NST12(NCPU,2))
       XSTATES=DBLE(NSTATE)
       XSNOW=0.0D0

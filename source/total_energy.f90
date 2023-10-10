@@ -20,19 +20,18 @@ MODULE total_energy
   etotal=enl+eloc+eke+exc+estat
 ! write(6,*)eke,etotal!,enl,dreal(eloc),eke,icpu
 
-if(IONODE.AND.DEBUG)then
-! open(7,file='ENERGY.dat')
-  WRITE(7,'(1A,A30,A2,T38,F15.10,A5)'),"#",'TOTAL ENERGY',"=",etotal,"A.U."!ehatree
-  WRITE(7,'(1A,A30,A2,T38,F15.10,A5)')"#",'KINETIC ENERGY',"=",eke,"A.U."
-  WRITE(7,'(1A,A30,A2,T38,F15.10,A5)')"#",'ELECTROSTATIC ENERGY',"=",estat,"A.U."
-  WRITE(7,'(1A,A30,A2,T38,F15.10,A5)'),"#",'SELF ENERGY CONTRIBUTION',"=",dreal(eself),"A.U."
-  WRITE(7,'(1A,A30,A2,T38,F15.10,A5)'),"#",'OVERLAP ENERGY CONTRIBUTION',"=",esr,"A.U."
-  WRITE(7,'(1A,A30,A2,T38,F15.10,A5)')"#",'LOCAL PP ENERGY',"=",dreal(eloc),"A.U."
-  WRITE(7,'(1A,A30,A2,T38,F15.10,A5)')"#",'NON LOCAL PP ENERGY',"=",enl,"A.U."
-  WRITE(7,'(1A,A30,A2,T38,F15.10,A5)')"#",'EXCHANGE CORRELATION ENERGY',"=",exc,"A.U."
-  WRITE(7,*) "********"
+!if(IONODE.AND.DEBUG)then
+!OPEN(7,FILE="energy.dat",STATUS="unknown",position="APPEND")
+!  WRITE(7,'(1A,A30,A2,T38,F15.10,A5)'),"#",'TOTAL ENERGY',"=",etotal,"A.U."!ehatree
+!  WRITE(7,'(1A,A30,A2,T38,F15.10,A5)')"#",'KINETIC ENERGY',"=",eke,"A.U."
+!  WRITE(7,'(1A,A30,A2,T38,F15.10,A5)')"#",'ELECTROSTATIC ENERGY',"=",estat,"A.U."
+!  WRITE(7,'(1A,A30,A2,T38,F15.10,A5)'),"#",'SELF ENERGY CONTRIBUTION',"=",dreal(eself),"A.U."
+!  WRITE(7,'(1A,A30,A2,T38,F15.10,A5)'),"#",'OVERLAP ENERGY CONTRIBUTION',"=",esr,"A.U."
+!  WRITE(7,'(1A,A30,A2,T38,F15.10,A5)')"#",'LOCAL PP ENERGY',"=",dreal(eloc),"A.U."
+!  WRITE(7,'(1A,A30,A2,T38,F15.10,A5)')"#",'NON LOCAL PP ENERGY',"=",enl,"A.U."
+!  WRITE(7,'(1A,A30,A2,T38,F15.10,A5)')"#",'EXCHANGE CORRELATION ENERGY',"=",exc,"A.U."
+!  WRITE(7,*) "********"
 ! CLOSE(7)
-endif
 !endif
   ENd SUBROUTINE
 
@@ -87,7 +86,7 @@ endif
     eh=(0.0d0,0.0d0)!
     eion=(0.0d0,0.0d0)!
     ee=(0.0d0,0.0d0)! 
-    elpp=0.5d0*eigrxvps(1)*DCONJG(rho_g(1,1)) !Sudhir DBG 
+    elpp=0.5d0*eigrxvps(1)*DCONJG(rho_g(1,1)) !Sudhir DBG
   else
     ig1=1
     eh=(0.0d0,0.0d0)
@@ -95,7 +94,7 @@ endif
     ee=(0.0d0,0.0d0)
     elpp=(0.0d0,0.0d0)
   endif
-
+  !print*,(DCMPLX(fourpi/(twopibya2*hg(ig)),0.D0)),rhog(1,1)
   do ig=ig1,ngrho_l
     rhog=rho_g(ig,1)+eigrxrhos(ig)
     eh=eh+((DCMPLX(fourpi/(twopibya2*hg(ig)),0.D0))*rhog)*dconjg(rhog)
@@ -103,7 +102,7 @@ endif
     ee=ee+(DCMPLX(fourpi/(twopibya2*hg(ig)),0.D0))*rho_g(ig,1)*DCONJG(rho_g(ig,1)) 
     elpp=elpp+eigrxvps(ig)*DCONJG(rho_g(ig,1)) 
   enddo
-    !
+  !
 
   CALL MPI_GlobSumC2s(elpp)
   CALL MPI_GlobSumC2s(eh)
@@ -140,7 +139,7 @@ endif
   REAL(KIND=dp)    ARGMAX          !DERFC(ARG) and DEXP(-ARG*ARG) underflow
   PARAMETER (ARGMAX=20.D0)
   REAL(KIND=dp)  RXLM1,RXLM2,RXLM3,ZV2,RCKJ,YLM,ZLM,ERRE2,RLM,ARG,ESRTZERO,ADDESR,ADDPRE,&
-  &        REPAND,XLM
+  &        REPAND,XLM,xlm_p,ylm_p,zlm_p
   REAL(KIND=dp)  TFION1,TFION2,TFION3,TFION4,TFION5,TFION6
   INTEGER ISUB,K,J,L,M,LAX,INF,IX,IY,IZ,ISHFT,IAT
   LOGICAL TZERO
@@ -167,10 +166,12 @@ endif
                 tzero=.true.
               ELSE
                 tzero=.false.
-                xlm=atco(1,l,k)-atco(1,m,j)
-                ylm=atco(2,l,k)-atco(2,m,j)
-                zlm=atco(3,l,k)-atco(3,m,j)
-                CALL pbc(xlm,ylm,zlm,xlm,ylm,zlm,1,a_lattice/2.d0,symmetry)
+                xlm_p=atco(1,l,k)-atco(1,m,j)
+                ylm_p=atco(2,l,k)-atco(2,m,j)
+                zlm_p=atco(3,l,k)-atco(3,m,j)
+                !print*,atco(1,l,k),atco(1,m,j)
+                !CALL apply_pbc(xlm,ylm,zlm,xlm,ylm,zlm,1,a_lattice,symmetry)
+                CALL apply_pbc(xlm_p,ylm_p,zlm_p,xlm,ylm,zlm,1,a_lattice,symmetry) 
               ENDIF
               IF(TFOR) THEN
                 TFION1 = force(1,L,K)

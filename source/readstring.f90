@@ -2,18 +2,19 @@
 
       CONTAINS
       SUBROUTINE READ_R(STRING,FPTNUM,ERROR)
+      USE KINDS
       IMPLICIT NONE
 !C    Arguments
       CHARACTER STRING*(*)
       INTEGER   IIN,IOUT
-      REAL*8    FPTNUM
+      REAL(KIND=DP)    FPTNUM
       LOGICAL   ERROR
 !C     Variables
-      REAL*8    ZERO,ONE,TEN
+      REAL(KIND=DP)    ZERO,ONE,TEN
       PARAMETER (ZERO=0.D0,ONE=1.D0,TEN=10.D0)
       CHARACTER IV*80
       INTEGER   I1,I2,LENGTH,INV,ISEXP,NEXP,J,INDEX
-      REAL*8    V1,SIGN,SCALE
+      REAL(KIND=DP)    V1,SIGN,SCALE
       LOGICAL   DIGIT,EXP,POINT,TSIGN,SLASH
 !C     ==--------------------------------------------------------------==
       IIN=1
@@ -278,6 +279,7 @@
 !     ==================================================================
 
       SUBROUTINE READ_I(STRING,INTNUM,ERROR)
+      USE KINDS
 !     ==--------------------------------------------------------------==
       IMPLICIT NONE
 !     Arguments
@@ -285,7 +287,7 @@
       INTEGER INTNUM,IIN,IOUT
       LOGICAL ERROR
 !     Variables
-      REAL*8 FPTNUM
+      REAL(KIND=DP) FPTNUM
 !     ==--------------------------------------------------------------==
       CALL READ_R(STRING,FPTNUM,ERROR)
       INTNUM=NINT(FPTNUM)

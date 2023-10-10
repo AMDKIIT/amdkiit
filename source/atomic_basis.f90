@@ -14,16 +14,16 @@ MODULE atomic_basis
   integer,dimension(:,:),allocatable ::    nqsto
   real(kind=dp), dimension(:,:), allocatable::stoexp
   real(kind=dp), dimension(:,:,:), allocatable::atwfr
-  !     real(kind=dp), dimension(:,:,:,:), allocatable::cat
+  real(kind=dp), dimension(:), allocatable:: ggnh,ggng,ar
+
   real(kind=dp)  atrg(splnmax,spmax),an,DATOM(nspln,2),ARHO(splnmax),WRK(NSPLN)
-  REAL(kind=dp)  XG,FAAC,TMP,OCCU,CURRCHARGE
+  REAL(kind=dp)  XG,FAAC,TMP,OCCU,CURRCHARGE!,ar(NGRHO_l)
   complex*16 work(2*splnmax,5)
   real(kind=dp)  fint(2*splnmax),bsint(2*splnmax),gg(2*splnmax),temp(splnmax,3)
   real(kind=dp)  disc,xmax,rmin,gmin
   integer is,mmax,nwork,n2,n22,il,ishell,l,ir,ierr,ne(4,7),meshat,isa,isa0
   real(kind=dp)    valch,zc,dclog!,srules
   integer   iatom,ms,m,n,i,MUSED
-  real(kind=dp):: ggng(1:nspln),ggnh(1:nspln)
   logical saved
   real(kind=dp)  fac(0:14)
   data    fac / 1.d0, 1.d0, 2.d0, 6.d0, 24.d0, 120.d0, 720.d0,&
@@ -34,11 +34,12 @@ MODULE atomic_basis
   real(kind=dp) :: r(2),cc
   integer :: istate, ig,lxx,natst,ish,ll,iv,ly,lpp(5),iaorb,iat,ia,ixx
   real(kind=dp) :: norm
-  complex*16::ci,tsfac!,catom(ngpw,6)
+  complex*16::ci,tsfac
   data       lpp /0,1,4,9,16/
 
-
-  ALLOCATE(RHO_G(NGRHO_l,NLSD))   
+  ALLOCATE(ggnh(nspln),ggng(nspln),ar(ngrho_l))
+  ALLOCATE(RHO_G(NGRHO_l,NLSD))  
+  ALLOCATE(RHO(MAX_FFT,NLSD)) 
   DO il=1,nspln
     ggng(il)=(il-1)*(Gcutoff%pw)/DBLE(nspln-1)
     ggnh(il)=(il-1)*(Gcutoff%rho)/DBLE(nspln-1)
@@ -77,6 +78,18 @@ MODULE atomic_basis
      ENDDO
   endif
 !-----------------------------------------
+ L=0
+      DO i=1,sp_t
+        DO J=1,atom_p_sp(i)
+          DO K=1,3
+              L=L+1
+              DTBYM(L)=5.D0*5.D0/(atwt(z(i))*1822.888485D0)!DT2BYM(IS)!*LSKCOR(K,IAT)
+          ENDDO
+        ENDDO
+      ENDDO
+
+
+!----------------------------------------
     nghmax=1
 upf_nghmax=1
 ngh=0
@@ -123,7 +136,7 @@ ngh=0
     valch=zv(is)
     zc=DBLE(iatom)-valch
     CALL icopy(28,e_config(1,1,iatom),1,ne,1)
-    !WRITE(6,*)"#iNNE,",NE
+
     ms=0
     m=0
     do n=1,7
@@ -134,7 +147,6 @@ ngh=0
     enddo
     nshell(is)=ms
   ENDDO
-
   meshat=256
   dclog=1.049999881d0
   m1shl=0
@@ -159,7 +171,6 @@ ngh=0
               lshell(ms,is)=l-1
               stoexp(ms,is)=slat_expo(z(is),ne,n,l-1)
               oc(ms,is)=ne(l,n)
-              !write(6,*)"##",nqsto(ms,is),lshell(ms,is),stoexp(ms,is),oc(ms,is)
             endif
           enddo
         enddo
@@ -193,7 +204,6 @@ ngh=0
         ENDDO
         NUMAORMAX=MAX(NUMAORMAX,NUMAOR(IS))
      ENDDO
-!     write(40,*)NATTOT,NUMAORMAX,NUMAOR(1),NUMAOR(2)
 
       ity=0
       cat=0.0
@@ -201,7 +211,7 @@ ngh=0
         n2=nint(log(1.d0*meshat)/log(2.d0)+0.499999d0)
         n22=2**n2
         rmin=log(atrg(1,is))
-!         write(13,*)ITY,n22,RMIN
+
         if(ity.eq.1) then
           gmin=log(sqrt(Gcutoff%rho)*twopibya)-(meshat-1)*dlog(1.049999881D0)
         else
@@ -219,21 +229,15 @@ ngh=0
           enddo
 !         fourier transformation
           call sbt(fint,bsint,l,rmin,gmin,dlog(1.049999881D0),n2,saved,&
-     &              work(1,1),work(1,2),work(1,3),work(1,5),2*splnmax,disc)
-!            call tgrid(gg(1),meshat,ggng(1),nspln,bsint(1),splnmax,temp(1,1),temp(1,2),temp(1,3))
+          &work(1,1),work(1,2),work(1,3),work(1,5),2*splnmax,disc)
             call INTRP_grid(gg(1),meshat,ggng(1),nspln,bsint(1),splnmax)
             call dcopy(nspln,bsint(1),1,cat(1,1,ishell,is),1)
-!            write(14,*)"cat",cat(1,1,ishell,is),bsint(1)
             if(l.gt.0.and.ggng(1).lt.1.d-12) cat(1,1,ishell,is)=0.0d0
-!            call curv1(nspln,ggng,cat(1,1,ishell,is),0.0d0,0.0d0,3,&
-!     &                 cat(1,2,ishell,is),temp,0.0d0,ierr)
              
-!           CALL spline_inter(nspln,ggng,cat(1,1,ishell,is),HG(1),cat(1,2,ishell,is),hg(2)-hg(1),nspln)
         enddo
       enddo
 
 !!!------------------------------------------------------------
-!WRITE(21,*)"IS",NSHELL(1),OC(1,1),meshat,ATWFR(1,1,1),splnmax,nspln
     ISA0=0
     Rho_G=(0._dp,0._dp)
     DO IS=1,sp_t
@@ -266,12 +270,10 @@ ngh=0
       DO IL=1,NSPLN
         XG=SQRT(GGNH(IL))*twopibya
         CALL ov_sph_bes_f(ATRG(1,IS),DLOG(1.049999881D0),MUSED,ARHO,0,XG,ATRG(MUSED,IS),TMP)
-        !CALL BESSOV(ATRG(1,IS),DLOG(1.049999881D0),MUSED,ARHO,0,XG,ATRG(MUSED,IS),TMP)
         DATOM(IL,1)=TMP
       ENDDO
        !
         CALL ov_sph_bes_f(ATRG(1,IS),DLOG(1.049999881D0),MUSED,ARHO,0,0.0D0,ATRG(MUSED,IS),TMP)
-       !CALL BESSOV(ATRG(1,IS),DLOG(1.049999881D0),MUSED,ARHO,0,0.0D0,ATRG(MUSED,IS),TMP)
 
       IF(TMP.LT.1.D-3) THEN
         FAAC=0.D0
@@ -280,20 +282,20 @@ ngh=0
       ENDIF
 
       CALL DSCAL(NSPLN,FAAC,DATOM(1,1),1)
-      !CALL CURV1(NSPLN,GGNH,DATOM(1,1),0.D0,0.D0,3,DATOM(1,2),WRK,0.D0,IERR)
-      CALL spline_inter(NSPLN,GGNH,DATOM(1,1),HG(1),DATOM(1,2),HG(2)-HG(1),nspln)
+      CALL spline_inter(NSPLN,GGNH(1),DATOM(1,1),HG(1),AR(1),NGRHO_l)
+
         DO IG=1,NGRHO_l
           TSFAC=DCMPLX(0.D0,0.D0)
           DO IA=1,atom_p_sp(IS)
             ISA=ISA0+IA
             TSFAC=TSFAC+eigr(ig,isa)
           ENDDO
-          AR=DATOM(int(HG(IG))+1,2)!CURV2(HG(IG),NSPLN,GGNH(1),DATOM(1,1),DATOM(1,2),0.D0)
-!          Rho_G(IG)=Rho_G(IG) + AR*(1/cell_volume)*TSFAC
-          Rho_G(IG,NLSD)=Rho_G(IG,NLSD) + AR*(1/cell_volume)*TSFAC
+          Rho_G(IG,NLSD)=Rho_G(IG,NLSD) + AR(IG)*(1/cell_volume)*TSFAC
         ENDDO
         ISA0=ISA0+atom_p_sp(IS)
     ENDDO !sp_t loop
+
+DEALLOCATE(ggnh,ggng,nqsto,stoexp,ar,atwfr)
 RETURN
 !!!------------------------------------------------------------
    END SUBROUTINE setbasis

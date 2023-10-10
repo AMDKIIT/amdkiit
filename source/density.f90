@@ -1,6 +1,7 @@
 MODULE density
 
- CONTAINS
+   CONTAINS
+
    SUBROUTINE eval_density  !!rhoofr.
    USE kinds
    USE system_data_types
@@ -107,7 +108,7 @@ MODULE density
 
    ALLOCATE(WORK(MAX_FFT))
 
-     IF(.NOT.ASSOCIATED(RHO)) ALLOCATE(RHO(MAX_FFT,NLSD)) 
+     !IF(.NOT.ASSOCIATED(RHO)) ALLOCATE(RHO(MAX_FFT,NLSD)) 
      DO ILSD=1,NLSD 
        WORK=(0.0d0,0.0d0)
        DO IG=1,NGRHO_l
@@ -120,6 +121,7 @@ MODULE density
          RHO(IR,ILSD)= DREAL(WORK(IR))
        ENDDO 
      ENDDO 
+   DEALLOCATE(work)
 
    END SUBROUTINE rhog2r
 
@@ -142,6 +144,7 @@ MODULE density
        RHO_G(IR,ILSD)= WORK(map_grid1d_p(IR))
      ENDDO
    ENDDO !lsd loop
+   DEALLOCATE(work)
 !Sudhir DBG 
    !if(icpu==1)write(*,*)"#1",rho_g(1),WORK(1),RHO(1),NNR1,NGRHO_l
    END SUBROUTINE rhor2g
@@ -157,7 +160,6 @@ MODULE density
    integer :: nris(3),is,ia,i,i_tot,ilowerleft(3),i1,i2,i3,ir,step,kr1s,kr2s,kr3s,j,k,ii,ii1,ii2
    integer, dimension(:),allocatable :: iatyp !atomic number of species 
 !
-   print *,"hi from cubefile"
    do i=1,nnr1
      RHO(i,1) = RHO(i,1)-RHO(i,2)!this sould go into PSI 
    enddo
@@ -215,9 +217,10 @@ MODULE density
      enddo
      ilowerleft(i1)=MOD((ilowerleft(i1)-1)+1000*NRIS(i1),NRIS(i1))+1
   enddo
-  filename='RHO_SPIN.cube'
-   open(200,file=filename)
-   write(200,'(A)') ' CPMD CUBE FILE: '//filename
+  filename='rho_spin.cube'
+   !open(200,file=filename)
+   OPEN(200,FILE=filename,STATUS="unknown",position="APPEND")
+   write(200,'(A)') ' CPMD CUBE FILE: '//trim(filename)
    write(200,'(A)') ' Total SCF Density'
    write(200,'(I5,3F12.6)')i_tot,(lowerleft(i),i=1,3)
    write(200,'(I5,3F12.6)')(nris(1)/step)+1,(dble(step)*a_cell(1,ir)/DBLE(nris(1)),ir=1,3)
@@ -242,6 +245,7 @@ MODULE density
      RHO(i,1) = RHO(i,1)+RHO(i,2) !back to alpha-density
    enddo
 !
+   deallocate(psi_tmp,rho_tmp)
    return
    end
 END MODULE density

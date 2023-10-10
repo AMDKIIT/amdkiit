@@ -14,42 +14,28 @@ MODULE pseudopotential
   INTEGER li,ki,l2,lj,jv,kj,l
   REAL(KIND=DP):: sum
   COMPLEX*16 el
-  COMPLEX(KIND=dp), DIMENSION(:), POINTER :: work
+  !COMPLEX(KIND=dp), DIMENSION(:), POINTER :: work
 
-  ALLOCATE(WORK(MAX_FFT))
+  !ALLOCATE(WORK(MAX_FFT))
+  !   WORK=(0._dp,0._dp)
 
-     WORK=(0._dp,0._dp)
      el=(0._dp,0._dp) 
-!Sudhir DBG 
-    if(lopen_shell.and.nlsd.eq.2)then
-       do ig=1,ngrho_l
-      !    rho_g(ig,1)=rho_g(ig,1)+rho_g(ig,2)
-       enddo
-     endif
-!Sudhir DBG 
-!   'VOO=' GRID VALUES FOR LOCAL PART OF PP AND LOCAL PSEUDOPOTENTIAL
+
      IF(g0_stat)then
-     el=0.5d0*eigrxvps(1)*DCONJG(rho_g(1,1))!WORK(map_grid1d_p(1)))
+     el=0.5d0*eigrxvps(1)*DCONJG(rho_g(1,1))
      ig_s=2
      else
      el=(0.0D0,0.0D0) 
      ig_s=1
      endif
-    ! write(5001,*)el
+
      DO ig=ig_s,ngrho_l
-      el=el+eigrxvps(ig)*DCONJG(rho_g(ig,1))
-!      write(5001,*)ig,DCONJG(rho_g(map_grid1d_p(1),1))
+      el=el+(eigrxvps(ig)*DCONJG(rho_g(ig,1)))
      ENDDO
      CALL MPI_GlobSumC2s(el)
      eloc=2.d0*DREAL(el)*cell_volume
-!     write(5001,*)eloc,rho_g(1,1)
-    ! DO i=1,sp_t
-    ! if(l_upf) then
-    !  CALL upf_nlppgrid(i)
-    ! else
-    !  CALL nlppgrid(i)
-    ! endif
-    ! ENDDO
+     !------------------------*********************-----------------------!
+
      if(l_upf) then
      CALL upf_nlpro
      else
@@ -112,14 +98,6 @@ MODULE pseudopotential
              ENDDO
      END DO
 endif
-!Sudhir DBG 
-    if(lopen_shell.and.nlsd.eq.2)then
-       do ig=1,ngrho_l
-          !rho_g(ig,1)=rho_g(ig,1)-rho_g(ig,2)
-       enddo
-     endif
-!Sudhir DBG 
-
    
   return
   END SUBROUTINE pp_energy
@@ -132,12 +110,20 @@ endif
 
   IMPLICIT NONE
 
-  INTEGER   lpmax,is,iv,ig,l,lp
-  REAL(KIND=DP)::    vol,xx,tw!,ylmb(ngrho_l,1,1)!todo
+  INTEGER   lpmax,is,iv,ig,l,lp,il
+  REAL(KIND=DP)::    vol,xx,tw
   REAL(KIND=DP)::    dasum
   external  dasum
   REAL(KIND=dp), DIMENSION(:,:,:),   POINTER ::ylmb
+  REAL(KIND=dp), DIMENSION(:),   POINTER ::m_wns
+  REAL(KIND=DP),DIMENSION(:),POINTER::  ggng
   IF(.NOT.ASSOCIATED(twnl))ALLOCATE(twnl(ngpw_l,nghmax,spmax))
+  ALLOCATE(m_wns(ngpw_l),ggng(nspln))
+  m_wns=0.0d0
+  DO il=1,nspln
+            ggng(il)=(il-1)*(Gcutoff%pw)/DBLE(nspln-1)
+  enddo
+
   lpmax=0
   DO is=1,sp_t
     IF(ngh(is).gt.0) THEN
@@ -164,14 +150,15 @@ endif
       ENDIF
       
       xx=dasum(nspln,wns(1,1,iv,is),1)
+      CALL spline_inter(nspln,ggng,wns(1,1,iv,is),hg(1),m_wns(1),ngpw_l)
       IF(xx.gt.1.d-12) THEN
         DO ig=1,ngpw_l
-          tw=wns(int(hg(ig)+1),2,iv,is)!curv2(hg(ig),nspln,ggng(1),wns(1,1,iv,is),wns(1,2,iv,is),0.0d0)
-          twnl(ig,iv,is)=ylmb(ig,lp,1)*tw*vol
+          twnl(ig,iv,is)=ylmb(ig,lp,1)*vol*m_wns(ig)
         ENDDO
       ENDIF
     ENDDO
   ENDDO
+  DEALLOCATE(m_wns,ggng,ylmb)
   END SUBROUTINE nlpro
 
   SUBROUTINE fnl(C0,nstat)
@@ -184,8 +171,6 @@ endif
   INTEGER   isa0,is,iv,ia,ig,isa,ikind,nat,ik,i,nstat,ii
   REAL(KIND=DP)    er,ei,check,xg,xrg,flx,t,sum
   COMPLEX*16 ci,scr(ngpw_l,na_max),C0(NGPW_l,NSTAT)
-  REAL(KIND=DP), DIMENSION(:),ALLOCATABLE ::  SCRATCH  ! nl(1,atom_t,1,nstate,1)!nkpnt)
-  ALLOCATE(SCRATCH(NSTATE))
   ALLOCATE(nl(1,atom_t,nghmax,nstat))
   ikind=1
   nl=0.0D0
@@ -258,11 +243,12 @@ endif
   INTEGER   is,il,l,j,iv,ir,lm,k,lold,ierr
   REAL(KIND=DP)::    gmax(splnmax),wsgtmp(splnmax)
   REAL(KIND=DP)::   wc(splnmax),wfc(splnmax),wtemp(splnmax)
- REAL(KIND=DP)::    ggng(1:nspln)      
+  !REAL(KIND=DP)::    ggng(1:nspln)      
   REAL(KIND=DP)::    jl(meshw(is))!,wns(nspln,2,upf_nghmax,sp_t)
   REAL(KIND=DP)::   xg,tmp,xgr
   REAL(KIND=DP)::    wfint(meshw(is)),fnt(splnmax),loggrid
-
+  REAL(KIND=DP),DIMENSION(:),POINTER::  ggng 
+  ALLOCATE(ggng(nspln))
 fnt = 0.0D0
 wfint = 0.0D0
 gmax = 0.0D0
@@ -296,11 +282,12 @@ wtemp = 0.0D0
             CALL simpsn(meshw(is),fnt,tmp)
             wns(il,1,iv,is)=fourpi*tmp
           ENDDO
-           CALL spline_inter(nspln,ggng,wns(1,1,iv,is),hg(1),wns(1,2,iv,is),hg(2)-hg(1),nspln)
+           !CALL spline_inter(nspln,ggng,wns(1,1,iv,is),hg(1),wns(1,2,iv,is),hg(2)-hg(1),nspln)
       ENDIF
       lold=l
     ENDDO
   RETURN
+  DEALLOCATE(GGNG)
   END SUBROUTINE upf_nlppgrid
   !---------------------------------------------------------------------------
   SUBROUTINE upf_nlpro
@@ -308,11 +295,20 @@ wtemp = 0.0D0
 
   IMPLICIT NONE
   !rinforce.f90
-  INTEGER   lpmax,is,iv,ig,l,lp
+  INTEGER   lpmax,is,iv,ig,l,lp,il
   REAL(KIND=DP)::    vol,xx,tw!,ylmb(ngrho_l,1,1)!todo
   REAL(KIND=DP)::    dasum
   external  dasum
  REAL(KIND=dp), DIMENSION(:,:,:),   POINTER ::ylmb
+   REAL(KIND=dp), DIMENSION(:),   POINTER ::m_wns
+  REAL(KIND=DP),DIMENSION(:),POINTER::  ggng
+  ALLOCATE(m_wns(ngpw_l),ggng(nspln))
+   m_wns=0.0d0
+  
+      DO il=1,nspln
+        ggng(il)=(il-1)*(Gcutoff%pw)/DBLE(nspln-1)
+     ENDDO
+
   IF(.NOT.ASSOCIATED(twnl))ALLOCATE(twnl(ngpw_l,upf_nghmax,spmax))
   !CALL initzero(ylmb,ngrho_l)
   !---------------------------------
@@ -338,15 +334,23 @@ wtemp = 0.0D0
     DO iv=1,upf_ngh(is)
       LP=LPVAL(IV,IS)
       xx=dasum(nspln,wns(1,1,iv,is),1)
+      CALL spline_inter(nspln,ggng,wns(1,1,iv,is),hg(1),m_wns(1),ngpw_l)
       IF(xx.gt.1.d-12) THEN
         DO ig=1,ngpw_l
-          tw=wns(int(hg(ig)+1),2,iv,is)!curv2(hg(ig),nspln,ggng(1),wns(1,1,iv,is),wns(1,2,iv,is),0.0d0)
-          twnl(ig,iv,is)=ylmb(ig,lp,1)*tw*vol
-          
+          twnl(ig,iv,is)=ylmb(ig,lp,1)*vol*m_wns(ig)
         ENDDO
       ENDIF
+
+      !IF(xx.gt.1.d-12) THEN
+      !  DO ig=1,ngpw_l
+      !    tw=wns(int(hg(ig)+1),2,iv,is)!curv2(hg(ig),nspln,ggng(1),wns(1,1,iv,is),wns(1,2,iv,is),0.0d0)
+      !    twnl(ig,iv,is)=ylmb(ig,lp,1)*tw*vol
+      !    
+      !  ENDDO
+      !ENDIF
     ENDDO
   ENDDO
+  DEALLOCATE(ggng,m_wns,ylmb)
   END SUBROUTINE upf_nlpro
 
   SUBROUTINE upf_fnl(C0,nstat)
@@ -359,8 +363,8 @@ wtemp = 0.0D0
   INTEGER   isa0,is,iv,ia,ig,isa,ikind,nat,ik,i,nstat,ii,NHXS
   REAL(KIND=DP)    er,ei,check,xg,xrg,flx,t,sum
   COMPLEX*16 ci,scr(ngpw_l,na_max),C0(NGPW_l,NSTAT)
-  REAL(KIND=DP), DIMENSION(:),ALLOCATABLE ::  SCRATCH  !
-  ALLOCATE(SCRATCH(NSTATE))
+  !REAL(KIND=DP), DIMENSION(:),ALLOCATABLE ::  SCRATCH  !
+  !ALLOCATE(SCRATCH(NSTATE))
 !  ALLOCATE(nl(1,atom_t,nghmax,nstat))
   ikind=1
   !CALL initzero(nl,nstat*atom_t)
@@ -514,8 +518,6 @@ wtemp = 0.0d0
             CALL simpsn(meshw(is),fnt,tmp)
             wns(il,1,iv,is)=loggrid*fourpi*tmp
           ENDDO
-          !CALL curv1(nspln,ggng,wns(1,1,iv,is),0.0d0,0.0d0,3,wns(1,2,iv,is),fnt,0.0d0,ierr)
-       CALL spline_inter(nspln,ggng,wns(1,1,iv,is),hg(1),wns(1,2,iv,is),hg(2)-hg(1),nspln)
         ENDIF
       ENDIF
       lold=l

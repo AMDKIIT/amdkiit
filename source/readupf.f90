@@ -28,8 +28,8 @@
       PARAMETER (IUNIT=20)
       LOGICAL ERREAD,BACK
       
-
-      OPEN(UNIT=IUNIT,FILE=trim(PATHOFINPUT)//'PSEUDOPOTENTIAL/'//filename,IOSTAT=ios)
+      OPEN(UNIT=IUNIT,FILE=trim(PATHOFINPUT)//filename,IOSTAT=ios)
+      !OPEN(UNIT=IUNIT,FILE=trim(PATHOFINPUT)//'PSEUDOPOTENTIAL/'//filename,IOSTAT=ios)
       IF(ios.NE.0)THEN
         WRITE(*,*)"    Reading ",filename," is not successful"
         STOP

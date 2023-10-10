@@ -17,7 +17,7 @@ CONTAINS
       CALL dCOPY(mp,F(1),1,FC(1),1)
      
       DO I=1,MW
-        call spline_inter(MP,RP,FC,RW(I),CC,0.0D0,1)!
+        call spline_inter(MP,RP,FC,RW(I),CC,1)!
         f(i)=cc
       ENDDO
 
