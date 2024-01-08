@@ -98,11 +98,11 @@
       do while (ios.eq.0)
       read (id,iostat = ios, err = 99,FMT='(A)') read_string
       if (INDEX(read_string,"<PP_"//string).NE.0 ) then
-      print*,read_string
+      !!print*,read_string
       return
       endif
       enddo
-      99 print*, 'ERROR!!! No ',string,' block found', abs (ios)
+      99 print*, 'ERROR!!! NO ',string,' block found', abs (ios)
       end subroutine search
 !     ===================================================================================    
       SUBROUTINE search_end (id, string, l_rewind)
@@ -164,7 +164,6 @@
       CALL HEADER(ID,"number_of_proj",dummy_var,l_header_end)
       READ(dummy_var,*)upf_nbeta(i_sp)
        upf_lmax(i_sp)=upf_lmax(i_sp)+1
-      write(*,*)"lmax =",upf_lmax(i_sp),"Number_of_proj=",upf_nbeta(i_sp)
       END SUBROUTINE read_header
 !     ===================================================================================     
       SUBROUTINE header(id,string,var,l_search_end)
@@ -184,7 +183,7 @@
           return
          ELSE 
            if(INDEX(read_string,"/>").NE.0 )then      
-           print*, 'ERROR!!! "',string,'"',"  not found"
+           !print*, 'ERROR!!! "',string,'"',"  not found"
            rewind(id)
            EXIT 
            endif
@@ -205,7 +204,7 @@
          if(INDEX(read_string,string).NE.0 ) then
           var =trim(read_string(INDEX(read_string,'"')+1:INDEX(read_string, '"',BACK =.TRUE.)-1))
          else
-            print*, 'ERROR!!! "',string,'"',"  not found",ios!,l_search_end,read_string
+            !print*, 'ERROR!!! "',string,'"',"  not found",ios!,l_search_end,read_string
             var="null"
             backspace(idt)
          end if
@@ -221,19 +220,18 @@
       INTEGER ir,IOS
       CHARACTER (len=100) :: var
       
-      WRITE(*,*)upf_meshv(i_sp),size(read_var)
+      !WRITE(*,*)upf_meshv(i_sp),size(read_var)
       !if(i_sp==2)then
       !read(id,iostat = ios,FMT='(A)')var
       !print*,var,id,size(read_var)!(upf_meshv(i_sp),i_sp))
       !stop
       !else
-      print*,"*",read_var(1),read_var(upf_meshv(i_sp)),i_sp
+      !print*,"*",read_var(1),read_var(upf_meshv(i_sp)),i_sp
       read (id, *, err = 100, iostat = ios)(read_var(ir), ir=1,upf_meshv(i_sp))
       
-      print*,read_var(1),read_var(upf_meshv(i_sp)),i_sp
- 
-      100 print*,"ERROR",ios
+      !print*,read_var(1),read_var(upf_meshv(i_sp)),i_sp
       return
+      100 print*,"ERROR",ios
       END SUBROUTINE read_rr
 !     ===================================================================================        
       SUBROUTINE read_nonlocal(i_sp,id)
@@ -291,7 +289,7 @@
       !==================================================
        PPLIST(upf_index,1,I_SP)=upf_l
        NPRO(upf_l+1,I_SP)=NPRO(upf_l+1,I_SP)+1
-       print*,"**",upf_l,NPRO(upf_l+1,I_SP)
+       !print*,"**",upf_l,NPRO(upf_l+1,I_SP)
        IF(NPRO(upf_l+1,I_SP).GT.4) THEN
          print*,'RECPUPF','TOO MANY PROJECTORS'
       ENDIF
@@ -308,7 +306,6 @@
             UPF_NGHTOL(IV,I_SP)=L-1
              LPVAL(IV,I_SP)=LP
              LFVAL(IV,I_SP)=K
-      WRITE(*,*)"****",upf_NGHTOL(IV,I_SP),LPVAL(IV,I_SP),LFVAL(IV,I_SP)
            ENDDO
          ENDDO
        ENDDO
@@ -349,8 +346,8 @@
                 jv=pplist(j,2,i_sp)
                 hlsg(iv,jv,l,i_sp)=.5*dij_tmp(ir)
                 hlsg(jv,iv,l,i_sp)=.5*dij_tmp(ir)
-                print*,hlsg(iv,jv,l,i_sp),iv,jv,l,i_sp
-                print*,hlsg(jv,iv,l,i_sp),jv,iv
+                !print*,hlsg(iv,jv,l,i_sp),iv,jv,l,i_sp
+                !print*,hlsg(jv,iv,l,i_sp),jv,iv
              ENDDO
           ENDDO
       !==================================================

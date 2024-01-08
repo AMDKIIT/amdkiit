@@ -52,6 +52,7 @@ contains
     character(len=string_length, kind=c_char), intent(out) :: error
     type(c_ptr) :: root
     character(len=:, kind=c_char), allocatable :: filename_copy
+    error="Error"
     filename_copy = filename//char(0)
     call LoadFile_c(filename_copy, root, error)
     deallocate(filename_copy)

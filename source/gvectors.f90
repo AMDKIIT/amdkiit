@@ -347,7 +347,7 @@ MODULE gvectors
     USE system_data_types, ONLY :  ncpu,nrlead,nrgrids,b_cell
     IMPLICIT NONE
 
-    INTEGER, POINTER, INTENT(OUT) :: iray(:,:)
+    INTEGER,  INTENT(OUT) :: iray(:,:)
     REAL(KIND=DP), INTENT(IN)            :: gcut
 
     INTEGER :: nr1,nr2,nr3,nh1,nh2,nh3,&

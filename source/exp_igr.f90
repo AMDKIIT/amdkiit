@@ -203,8 +203,8 @@ END SUBROUTINE exp_igrxfactor
     DO ig=1,ngrho_l
       rhos(is,ig)=-zv(is)*exp(-(0.25D0*(raggio*raggio)*hg(ig)*twopibya2))*(1.d0/cell_volume)
     ENDDO
+   if(g0_stat) rhos(is,1)=-zv(is)*(1.d0/cell_volume)
   ENDDO
-  if(g0_stat) rhos(is,1)=-zv(is)*(1.d0/cell_volume)
   RETURN
   END SUBROUTINE form_factor_upf
 
@@ -281,9 +281,8 @@ END SUBROUTINE exp_igrxfactor
     DO ig=1,ngrho_l
       rhos(is,ig)=-zv(is)*exp(-(0.25D0*(raggio*raggio)*hg(ig)*twopibya2))*(1.d0/cell_volume)
     ENDDO
-  ENDDO
   IF(g0_stat) rhos(is,1)=-zv(is)*(1.d0/cell_volume)
-
+  ENDDO
   DEALLOCATE(VOO,vo,ggnh)
   RETURN
   END SUBROUTINE form_factor

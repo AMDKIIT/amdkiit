@@ -17,12 +17,10 @@
    CHARACTER (LEN=80) :: hessian    !<
   END TYPE initialization
 
-!!!!!!!!!!!!!!!!!! RITAMA !!!!!!!!!!!!!!!!!!!!!!!!!
   TYPE :: dynamics
    INTEGER:: max_step
    REAL(KIND=DP) :: temperature, time_step
   END TYPE dynamics
-!!!!!!!!!!!!!!!!!! RITAMA !!!!!!!!!!!!!!!!!!!!!!!!!
 
   TYPE :: optimization
    CHARACTER (LEN=80) ::minimizer
@@ -77,11 +75,11 @@
   REAL(KIND=dp) :: etxc
   COMPLEX*16    :: eloc,eself,eh,ee,eion,elpp
   REAL(KIND=dp) :: exc,estat,enl,etotal,esr
-  REAL(KIND=dp) :: wsg(spmax,120)
-  INTEGER       ::  nghtol(120,spmax),nghcom(120,spmax)! HOW TO CALCULATE NHX
+  REAL(KIND=dp) :: wsg(spmax,maxngh)
+  INTEGER       ::  nghtol(maxngh,spmax),nghcom(maxngh,spmax)! HOW TO CALCULATE NHX
   INTEGER       :: ngh(spmax),nl_angmom !TOTAL NUMBER OF NON-LOCAL ANGULAR MOMENTUM
   REAL(KIND=dp) :: foc(20),E_OLD
-  REAL(KIND=dp) :: wns(nspln,2,5,spmax)!,wns(nspln,2,5,spmax)!define in pseudopotential file
+  REAL(KIND=dp) :: wns(nspln,5,spmax)!,wns(nspln,2,5,spmax)!define in pseudopotential file
   INTEGER(8)    :: NNR1
   INTEGER       :: ngpw, &   !Number of planewaves (< Gcutoff%pw)
                    ngrho,&   !Number of planewaves (< Gcutoff%rho)
@@ -214,7 +212,7 @@ INTEGER             LFVAL(LMAXX*LMAXX*MPRO,spmax)
 INTEGER ::             PPLIST(LMAXX*4,2,spmax)
 LOGICAL :: L_UPF
 
-  INTEGER       :: upf_nghtol(120,spmax),upf_nghcom(120,spmax)! HOW TO CALCULATE NHX
+  INTEGER       :: upf_nghtol(maxngh,spmax),upf_nghcom(maxngh,spmax)! HOW TO CALCULATE NHX
   INTEGER       :: upf_ngh(spmax)!,nl_angmom !TO
   INTEGER       :: upf_nghmax
 !------------------------------------------------------------------

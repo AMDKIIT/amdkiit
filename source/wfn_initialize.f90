@@ -641,8 +641,6 @@ END SUBROUTINE vpsi
                       DO ia=1,atom_p_sp(is)
                          isa=isa0+ia
                          ddia(ia,i)=ddia(ia,i)+nl(1,isa,jv,i)*hlsg(ki,kj,l,is)
-                         write(51,*)ddia(ia,i),jv,ki,kj,l
-                         write(54,*)nl(1,isa,jv,i),isa,jv,i!!hlsg(ki,kj,l,is)
                       ENDDO
                    ENDDO
                 ENDIF

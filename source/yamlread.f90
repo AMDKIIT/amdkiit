@@ -362,7 +362,7 @@ END FUNCTION
    CHARACTER(LEN=*),intent(IN)               :: filename
    CHARACTER(LEN=*),ALLOCATABLE, intent(OUT)              :: LABEL(:)
    REAL(KIND=DP),INTENT(IN)::fact_m
-   INTEGER                                   :: J,I,IA,K,numLines,iunit
+   INTEGER                                   :: J,I,IA,numLines,iunit
    CHARACTER LINE*80, PATH*42
 
     character(len=2) :: current_element, previous_element
@@ -416,7 +416,7 @@ END FUNCTION
    DO J=1,sp_t
      DO IA=1,atom_p_sp(J)
      READ(12,*)LABEL(J),(ATCO(I,IA,J),I=1,3)
-     K=K+1
+     !K=K+1
      ENDDO
    ENDDO
    ATCO=ATCO*Fact_m

@@ -35,7 +35,7 @@ MODULE xc
   !LOGICAL is_lsd_but_not
  
   ALLOCATE(WORK(MAX_FFT),vpotg(ngrho_l))!,vptg(ngrho_l,nlsd))
-  ALLOCATE(scr_v(MAX_FFT),scr_vtmp(ngrho),vpotr(nnr1),vpotrb(nnr1))
+  ALLOCATE(scr_v(MAX_FFT),scr_vtmp(ngrho),vpotr(MAX_FFT),vpotrb(MAX_FFT))!vpotr(nnr1),vpotrb(nnr1))
  
      scale=1.0_dp
     

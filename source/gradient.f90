@@ -41,7 +41,7 @@
      IMPLICIT NONE
 
        INTEGER NOCC,I,IIABS
-       complex*16 C_2g(NGPW_L,1)
+       complex*16 C_2g(NGPW_L,nstate) !//1)
           NOCC=0
           DO I=1,NSTATE
             IF(OCCUPATION(I).GT.1.D-5) NOCC=NOCC+1

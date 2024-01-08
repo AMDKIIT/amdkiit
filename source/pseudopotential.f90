@@ -149,8 +149,8 @@ endif
         lp=nghcom(iv,is)
       ENDIF
       
-      xx=dasum(nspln,wns(1,1,iv,is),1)
-      CALL spline_inter(nspln,ggng,wns(1,1,iv,is),hg(1),m_wns(1),ngpw_l)
+      xx=dasum(nspln,wns(1,iv,is),1)
+      CALL spline_inter(nspln,ggng,wns(1,iv,is),hg(1),m_wns(1),ngpw_l)
       IF(xx.gt.1.d-12) THEN
         DO ig=1,ngpw_l
           twnl(ig,iv,is)=ylmb(ig,lp,1)*vol*m_wns(ig)
@@ -266,9 +266,9 @@ wtemp = 0.0D0
     DO iv=1,upf_ngh(is)
       l=upf_nghtol(iv,is)+1
       IF(l.eq.lold) THEN
-      CALL dcopy(2*nspln,wns(1,1,iv-1,is),1,wns(1,1,iv,is),1)
+      CALL dcopy(2*nspln,wns(1,iv-1,is),1,wns(1,iv,is),1)
       ELSE
-      wns=0.0d0
+      wns(:,iv,is)=0.0d0
       !CALL initzero(wns(1,1,iv,is),nspln)
         !IF(l.ne.skip(is)) THEN
           DO il=1,nspln
@@ -280,7 +280,7 @@ wtemp = 0.0D0
               fnt(ir)=RW(IR,IS)*rr(IR,IS)*upf_gnl(ir,is,l)*jl(ir) !!CHECK RR AND RW
             ENDDO
             CALL simpsn(meshw(is),fnt,tmp)
-            wns(il,1,iv,is)=fourpi*tmp
+            wns(il,iv,is)=fourpi*tmp
           ENDDO
            !CALL spline_inter(nspln,ggng,wns(1,1,iv,is),hg(1),wns(1,2,iv,is),hg(2)-hg(1),nspln)
       ENDIF
@@ -333,8 +333,8 @@ wtemp = 0.0D0
   DO is=1,sp_t
     DO iv=1,upf_ngh(is)
       LP=LPVAL(IV,IS)
-      xx=dasum(nspln,wns(1,1,iv,is),1)
-      CALL spline_inter(nspln,ggng,wns(1,1,iv,is),hg(1),m_wns(1),ngpw_l)
+      xx=dasum(nspln,wns(1,iv,is),1)
+      CALL spline_inter(nspln,ggng,wns(1,iv,is),hg(1),m_wns(1),ngpw_l)
       IF(xx.gt.1.d-12) THEN
         DO ig=1,ngpw_l
           twnl(ig,iv,is)=ylmb(ig,lp,1)*vol*m_wns(ig)
@@ -446,6 +446,7 @@ wtemp = 0.0D0
   REAL(KIND=DP)::    jl(meshw(is))!,wns(nspln,2,1,sp_t)
   REAL(KIND=DP)::   xg,tmp,xgr
   REAL(KIND=DP)::   wfint(meshw(is)),fnt(splnmax),loggrid
+  !ALLOCATE(wns(nspln,1,1,2))
 fnt = 0.0d0
 wfint = 0.0d0
 gmax = 0.0d0
@@ -499,9 +500,9 @@ wtemp = 0.0d0
     DO iv=1,ngh(is)
       l=nghtol(iv,is)+1
       IF(l.eq.lold) THEN
-      CALL dcopy(2*nspln,wns(1,1,iv-1,is),1,wns(1,1,iv,is),1)
+      CALL dcopy(2*nspln,wns(1,iv-1,is),1,wns(1,iv,is),1)
       ELSE
-      wns=0.0d0
+      wns(:,iv,is)=0.0d0
       !CALL initzero(wns(1,1,iv,is),nspln)
         IF(l.ne.skip(is)) THEN
           DO il=1,nspln
@@ -516,7 +517,7 @@ wtemp = 0.0d0
             ENDDO
            
             CALL simpsn(meshw(is),fnt,tmp)
-            wns(il,1,iv,is)=loggrid*fourpi*tmp
+            wns(il,iv,is)=loggrid*fourpi*tmp
           ENDDO
         ENDIF
       ENDIF

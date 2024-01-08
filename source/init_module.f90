@@ -79,7 +79,8 @@ SUBROUTINE initialize
   IF(IONODE)write(6,"(A)")repeat("*", 93)
   IF(IONODE)write(6, "(3A)")repeat(" ",42),"SPECIES",repeat(" ", 42)
   IF(IONODE)write(6,"(A)")repeat("*", 93)
-  IF(IONODE)write(6,"(A5,3A16,A1,A4,A1,A20)")"TYPE","X    ","Y    ","Z     ","(",coordinate_unit,")","PSEUDOPOTENTIAL"
+  IF(IONODE)write(6, "(2A)")repeat(" ",30),coordinate_unit
+  IF(IONODE)write(6,"(A5,3A16,A20)")"TYPE","X    ","Y    ","Z    ","PSEUDOPOTENTIAL"
   IF(IONODE)write(6,"(A)")repeat("-", 93)
 !  DO IS=1,sp_t
 !   DO IA=1,atom_p_sp(IS)

@@ -3,7 +3,8 @@ MODULE set_cell
 CONTAINS
   SUBROUTINE set_vec(a,b,c,a_cell,lattice_str)
   USE kinds
-  USE system_data_types, only : ionode,symmetry
+  USE CONSTANTS
+  USE system_data_types, only : ionode,symmetry,a_theta
   IMPLICIT NONE
   REAL(kind=dp), POINTER :: a_cell(:,:)
   REAL(kind=dp):: a,b,c
@@ -22,7 +23,8 @@ CONTAINS
      symmetry = 3
   case ("HEXAGONAL")
      symmetry = 4
-  case ("TRIGONAL")
+  !case ("TRIGONAL")
+  CASE ("TRIGONAL", "RHOMBOHEDRAL")
      symmetry = 5
   case ("TETRAGONAL")
      symmetry = 6
@@ -60,12 +62,15 @@ CONTAINS
                      -a/2.0D0,a*sqrt(3.0d0)/2.0D0, 0.0D0,&
                         0.0D0,              0.0D0, c], [3,3])
 
-!    ELSEIF(symmetry.EQ.5) THEN !Trigonal or rhombohedral
-!      a_cell = reshape([&
-!  a*SQRT(1.D0-(AlpHA_a))/SQRT(2.D0),-a*SQRT(1.D0-(AlpHA_A))/SQRT(2.D0)/SQRT(3.0d0),(a*SQRT(1.d0+2.d0*(ALPHA_A))/SQRT(3.0d0)), &
-!                               0.d0, SQRT(2.d0)*a*SQRT(1.D0-(ALPHA_A))/SQRT(3.0d0),(a*SQRT(1.d0+2.d0*(ALPHA_A))/SQRT(3.0d0)), &
-! -a*SQRT(1.D0-(AlpHA_a))/SQRT(2.D0),-a*SQRT(1.D0-(AlpHA_A))/SQRT(2.D0)/SQRT(3.0d0),(a*SQRT(1.d0+2.d0*(ALPHA_A))/SQRT(3.0d0))],[3,3])
-
+    ELSEIF(symmetry.EQ.5) THEN !Trigonal or rhombohedral
+    a_cell = reshape([a*SQRT(1.D0-(COS((a_theta(1))*pi/180.0d0)))/SQRT(2.D0),&
+                     -a*SQRT(1.D0-(COS((a_theta(1))*pi/180.0d0)))/SQRT(2.D0)/SQRT(3.0d0),&
+                     (a*SQRT(1.d0+2.d0*(COS((a_theta(1))*pi/180.0d0)))/SQRT(3.0d0)), &
+                0.d0,   SQRT(2.d0)*a*SQRT(1.D0-(COS((a_theta(1))*pi/180.0d0)))/SQRT(3.0d0),&
+                     (a*SQRT(1.d0+2.d0*(COS((a_theta(1))*pi/180.0d0)))/SQRT(3.0d0)), &
+                     -a*SQRT(1.D0-(COS((a_theta(1))*pi/180.0d0)))/SQRT(2.D0),&
+                     -a*SQRT(1.D0-(COS((a_theta(1))*pi/180.0d0)))/SQRT(2.D0)/SQRT(3.0d0),&
+                     (a*SQRT(1.d0+2.d0*(COS((a_theta(1))*pi/180.0d0)))/SQRT(3.0d0))],[3,3])
     ELSEIF(symmetry.EQ.6) THEN !Tetragonal
       IF(c.EQ.0.D0) PRINT*,'C IS NULL'
        a_cell = reshape([    a, 0.D0, 0.D0, &
@@ -80,14 +85,41 @@ CONTAINS
     ELSEIF(symmetry.EQ.8) THEN !Orthorhombic
        IF(b.EQ.0.D0)PRINT*,'B IS NULL'
        IF(c.EQ.0.D0)PRINT*,'C IS NULL'
-
      a_cell = reshape([   a, 0.D0, 0.D0, &
                           0.D0,    b, 0.D0, &
                           0.D0, 0.D0,    c], [3,3])
 
-    !ELSEIF(symmetry.EQ.12) THEN !Monoclinic
-    !ELSEIF(symmetry.EQ.14) THEN !Triclinic
-    ELSEIF(symmetry.EQ.5 .OR.symmetry.EQ.12.OR.symmetry.EQ.14.OR.symmetry.EQ.9.OR. symmetry.EQ.10.OR.&
+    ELSEIF(symmetry.EQ.12) THEN !Monoclinic
+       IF(b.EQ.0.D0)PRINT*,'B IS NULL'
+       IF(c.EQ.0.D0)PRINT*,'C IS NULL'
+       IF(a_theta(1).EQ.0.D0) PRINT*,'ANGLE IS NULL'
+      
+       a_cell = reshape([ a,0.0D0, 0.0d0, &
+                       b*COS((a_theta(1))*pi/180.0d0), b*SQRT(1.D0-(COS((a_theta(1))*pi/180.0d0))**2), 0.0D0, &
+                      0.0D0,0.0d0, c ], [3,3])
+    ELSEIF(symmetry.EQ.14) THEN !Triclinic
+      IF (b.EQ.0.D0)print*,'THE SECOND ARGUMENT IS NULL'
+      IF (c.EQ.0.D0)print*,'THE THIRD ARGUMENT IS NULL'
+      IF (a_theta(1).EQ.1.D0)print*,'THE FIRST ANGLE IS NULL! '
+      IF (a_theta(2).EQ.1.D0)print*,'THE SECOND ANGLE IS NULL! '
+      IF (a_theta(3).EQ.1.D0)print*,'THE THIRD ANGLE IS NULL! '
+
+       IF (ACOS(a_theta(1))+ACOS(a_theta(2)).LT.ACOS(a_theta(3)))print*,'LATGEN','ALPHA + BETA >= GAMMA'
+       IF (ACOS(a_theta(2))+ACOS(a_theta(3)).LT.ACOS(a_theta(1)))print*,'LATGEN','BETA + GAMMA >= ALPHA'
+       IF (ACOS(a_theta(3))+ACOS(a_theta(1)).LT.ACOS(a_theta(2)))print*,'LATGEN','GAMMA + ALPHA >= BETA'
+
+       
+    a_cell = reshape([ a,0.D0, 0.D0, &
+                       b*COS((a_theta(3))*pi/180.0d0), b*(SQRT(1.D0-(COS((a_theta(3))*pi/180.0d0))**2)), 0.D0, &
+    c*(COS((a_theta(2))*pi/180.0d0)),  &
+    c*((COS((a_theta(1))*pi/180.0d0))-(COS((a_theta(2))*pi/180.0d0))*(COS((a_theta(3))*pi/180.0d0))) &
+       /SQRT(1.D0-(COS((a_theta(3))*pi/180.0d0))**2), &
+    c*(SQRT((1.D0+2.D0*(COS((a_theta(1))*pi/180.0d0))*(COS((a_theta(2))*pi/180.0d0))*(COS((a_theta(3))*pi/180.0d0)) &
+            -(COS((a_theta(1))*pi/180.0d0))**2-(COS((a_theta(2))*pi/180.0d0))**2 &
+            -(COS((a_theta(3))*pi/180.0d0))**2)/(1.D0-(COS((a_theta(3))*pi/180.0d0))**2))) &
+                     ] , [3,3])
+                      
+    ELSEIF(symmetry.EQ.12.OR.symmetry.EQ.14.OR.symmetry.EQ.9.OR. symmetry.EQ.10.OR.&
             symmetry.EQ.11.OR.symmetry.EQ.13) THEN
       IF(IONODE) WRITE(*,'(A,I3,A)') ' BRAVAIS LATTICE',symmetry,' NOT PROGRAMMED'
     STOP

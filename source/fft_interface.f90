@@ -324,7 +324,7 @@ MODULE fft_interface
          i=xscatter_fft_cat(jj)
          j=xscatter_fft_cat(jj+max_nhrays)
          xscatter_fft_cat(jj)=i+(j-1)*nrlead(2)
-         IF(ir<=ngrays)xscatter_fft_cat(jj+max_nhrays)=i+(j-gstart_zgrid)*nrlead(2) 
+         IF(ir<=Ggridinfo(6,ip+1))xscatter_fft_cat(jj+max_nhrays)=i+(j-gstart_zgrid)*nrlead(2) 
       END DO
     END DO
 
