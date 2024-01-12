@@ -242,12 +242,14 @@ subroutine geom_opt_lbfgs
         CALL wfn_opt(iopt)
         CALL MPI_GlobSumR2(force,3*NA_MAX*sp_t)
         CALL convert3dto1d(ATCO,3,NA_max,sp_t,x0,3*atom_t)
-        CALL convert3dto1d(-force,3,NA_max,sp_t,g0,3*atom_t)
+        force=-force
+        CALL convert3dto1d(force,3,NA_max,sp_t,g0,3*atom_t)
         if(i_opt) then 
-               CALL PRINT_COORDINATE(ATCO,-force,NA_max,sp_t,atom_t,etotal,iopt)
+               CALL PRINT_COORDINATE(ATCO,force,NA_max,sp_t,atom_t,etotal,iopt)
                iopt=iopt+1
                IF(IONODE)Write(6,"(3A)")repeat("*", 38)," GEOMETRY UPDATE ",repeat("*",38)
         endif
+        force=-force
         CALL LBFGS(3*atom_t,M,X0,etotal,G0,DIAGCO,DIAG,IPRINT,geo_opt%g_cutoff,XTOL,W,IFLAG,i_opt)
         IF(IFLAG.LE.0) GO TO 50
         CALL cpu_time(g_end)
