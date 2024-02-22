@@ -44,10 +44,8 @@ message(STATUS " *********************** ")
 
 message(STATUS " PROJECT VERSION: ${CMAKE_PROJECT_VERSION} ")
 
-string(TIMESTAMP CURRENT_DATE "%d-%m-%Y") # %H:%M:%S")
-message(STATUS " DATE: ${CURRENT_DATE} ")
 
-string(TIMESTAMP CURRENT_TIME "%H:%M:%S")
+string(TIMESTAMP CURRENT_TIME "%d-%m-%Y")
 message(STATUS " TIME: ${CURRENT_TIME} ")
 
 configure_file(version.h.in ../version.f90)
